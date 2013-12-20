@@ -6,8 +6,8 @@ module.exports = function (thingie, callback) {
   socket.on('close', destroy)
   res.on('finish', cleanup)
 
-  function destroy() {
-    callback()
+  function destroy(err) {
+    callback(err)
     cleanup()
   }
 

@@ -12,8 +12,9 @@ describe('on socket error', function () {
   it('should execute the callback on socket error', function () {
     var thingie = createThingie()
     var called = false
-    onSocketError(thingie, function () {
+    onSocketError(thingie, function (err) {
       called = true
+      err.message.should.equal('boom')
     })
     thingie.socket.emit('error', new Error('boom'))
     called.should.be.true
