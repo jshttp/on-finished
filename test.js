@@ -5,6 +5,7 @@ var onSocketError = require('./')
 function createThingie() {
   var ee = new EventEmitter
   ee.socket = new EventEmitter
+  ee.socket.writable = true
   return ee
 }
 
@@ -36,5 +37,15 @@ describe('on socket error', function () {
         throw new Error('wtf')
     }
     called.should.be.false
+  })
+})
+
+describe('when the socket is not writable', function () {
+  it('should execute the callback immediately', function (done) {
+    var thingie = createThingie()
+    thingie.socket.writable = false
+    onSocketError(thingie, function (err) {
+      done()
+    })
   })
 })

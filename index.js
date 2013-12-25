@@ -1,6 +1,8 @@
 module.exports = function (thingie, callback) {
   var socket = thingie.socket
   var res = thingie.res || thingie
+  if (!socket.writable)
+    return setImmediate(callback)
 
   socket.on('error', destroy)
   socket.on('close', destroy)
