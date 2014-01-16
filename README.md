@@ -1,16 +1,24 @@
-# On Socket Error [![Build Status](https://travis-ci.org/expressjs/on-socket-error.png)](https://travis-ci.org/expressjs/on-socket-error)
+# finished [![Build Status](https://travis-ci.org/expressjs/finished.png)](https://travis-ci.org/expressjs/finished)
 
-Execute a callback on if the socket errors. Specifically, this is when the client aborts a request. You want to destroy any file streams you create on socket errors otherwise you will leak file descriptors.
+Execute a callback when a request closes, finishes, or errors. This is useful for cleaning up streams. For example, you want to destroy any file streams you create on socket errors otherwise you will leak file descriptors.
+
+This is required to fix what many perceive as issues with node's streams. Relevant:
+
+- https://github.com/joyent/node/issues/6041
+- https://github.com/koajs/koa/issues/184
+- https://github.com/koajs/koa/issues/165
+
+The following code ensures that file descriptors are always closed once the response finishes.
 
 Node / Connect / Express:
 
 ```js
-var onSocketError = require('on-socket-error')
+var onFinished = require('finished')
 
 function (req, res, next) {
   var stream = fs.createReadStream('thingie.json')
   stream.pipe(res)
-  onSocketError(res, function () {
+  onFinished(res, function (err) {
     stream.destroy()
   })
 }
@@ -21,7 +29,7 @@ Koa:
 ```js
 function* () {
   var stream = this.body = fs.createReadStream('thingie.json')
-  onSocketError(this, function () {
+  onFinished(this, function (err) {
     stream.destroy()
   })
 }

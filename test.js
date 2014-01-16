@@ -1,6 +1,6 @@
 var EventEmitter = require('events').EventEmitter
 
-var onSocketError = require('./')
+var onFinished = require('./')
 
 function createThingie() {
   var ee = new EventEmitter
@@ -13,7 +13,7 @@ describe('on socket error', function () {
   it('should execute the callback on socket error', function () {
     var thingie = createThingie()
     var called = false
-    onSocketError(thingie, function (err) {
+    onFinished(thingie, function (err) {
       called = true
       err.message.should.equal('boom')
     })
@@ -24,7 +24,7 @@ describe('on socket error', function () {
   it('should not execute the callback if response is finished', function () {
     var thingie = createThingie()
     var called = false
-    onSocketError(thingie, function () {
+    onFinished(thingie, function () {
       called = true
     })
     thingie.emit('finish')
@@ -36,7 +36,7 @@ describe('on socket error', function () {
       if (err.message !== 'boom')
         throw new Error('wtf')
     }
-    called.should.be.false
+    called.should.be.true
   })
 })
 
@@ -44,8 +44,24 @@ describe('when the socket is not writable', function () {
   it('should execute the callback immediately', function (done) {
     var thingie = createThingie()
     thingie.socket.writable = false
-    onSocketError(thingie, function (err) {
+    onFinished(thingie, function (err) {
       done()
     })
+  })
+})
+
+describe('when the socket closes', function () {
+  it('should execute the callback', function (done) {
+    var thingie = createThingie()
+    onFinished(thingie, done)
+    thingie.socket.emit('close')
+  })
+})
+
+describe('when the request finishes', function () {
+  it('should execute the callback', function (done) {
+    var thingie = createThingie()
+    onFinished(thingie, done)
+    thingie.emit('finish')
   })
 })

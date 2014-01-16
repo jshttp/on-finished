@@ -4,19 +4,15 @@ module.exports = function (thingie, callback) {
   if (!socket.writable)
     return setImmediate(callback)
 
-  socket.on('error', destroy)
-  socket.on('close', destroy)
-  res.on('finish', cleanup)
+  socket.on('error', done)
+  socket.on('close', done)
+  res.on('finish', done)
 
-  function destroy(err) {
+  function done(err) {
+    socket.removeListener('error', done)
+    socket.removeListener('close', done)
+    res.removeListener('finish', done)
     callback(err)
-    cleanup()
-  }
-
-  function cleanup() {
-    socket.removeListener('error', destroy)
-    socket.removeListener('close', destroy)
-    res.removeListener('finish', cleanup)
   }
 
   return thingie
