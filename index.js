@@ -1,5 +1,5 @@
 module.exports = function (thingie, callback) {
-  var socket = thingie.socket
+  var socket = thingie.socket || thingie
   var res = thingie.res || thingie
   if (!socket.writable)
     return setImmediate(callback)
