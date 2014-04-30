@@ -21,6 +21,9 @@
     "mocha": "*",
     "should": "*"
   },
+  "engine": {
+    "node": ">= 0.10"
+  },
   "scripts": {
     "test": "mocha --require should --reporter spec"
   }
