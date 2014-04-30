@@ -9,6 +9,7 @@ module.exports = function (thingie, callback) {
   res.on('finish', done)
 
   function done(err) {
+    if (err != null && !(err instanceof Error)) err = null; // suck it node
     socket.removeListener('error', done)
     socket.removeListener('close', done)
     res.removeListener('finish', done)

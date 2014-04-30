@@ -65,3 +65,11 @@ describe('when the request finishes', function () {
     thingie.emit('finish')
   })
 })
+
+describe('when an emitter emits a non-error', function () {
+  it('should ignore the error', function (done) {
+    var thingie = createThingie()
+    onFinished(thingie, done)
+    thingie.socket.emit('close', false)
+  })
+})
