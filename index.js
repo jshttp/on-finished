@@ -1,8 +1,13 @@
+
+var defer = typeof setImmediate === 'function'
+  ? setImmediate
+  : process.nextTick
+
 module.exports = function (thingie, callback) {
   var socket = thingie.socket || thingie
   var res = thingie.res || thingie
   if (!socket.writable)
-    return setImmediate(callback)
+    return defer(callback)
 
   socket.on('error', done)
   socket.on('close', done)

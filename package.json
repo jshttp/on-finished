@@ -22,7 +22,7 @@
     "should": "*"
   },
   "engine": {
-    "node": ">= 0.10"
+    "node": ">= 0.8.0"
   },
   "scripts": {
     "test": "mocha --require should --reporter spec"
