@@ -8,7 +8,9 @@ Execute a callback when a request closes, finishes, or errors.
 
 #### Install
 
-`npm install finished`
+```sh
+$ npm install finished
+```
 
 #### Uses
 
