@@ -6,8 +6,10 @@ var defer = typeof setImmediate === 'function'
 module.exports = function (thingie, callback) {
   var socket = thingie.socket || thingie
   var res = thingie.res || thingie
-  if (!socket.writable)
+
+  if (res.finished || !socket.writable) {
     return defer(callback)
+  }
 
   socket.on('error', done)
   socket.on('close', done)

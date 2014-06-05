@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * call callback when called on already-finished socket
+
 1.1.4 / 2014-05-27
 ==================
 

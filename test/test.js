@@ -83,6 +83,22 @@ describe('http', function () {
         })
       })
     })
+
+    it('should execute the callback when called after finish', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function () {
+          onFinished(res, done)
+        })
+        setTimeout(res.end.bind(res), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        http.get('http://127.0.0.1:' + port, function (res) {
+          res.resume()
+          res.on('close', server.close.bind(server))
+        })
+      })
+    })
   })
 
   describe('when the request aborts', function () {
