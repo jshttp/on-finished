@@ -1,5 +1,6 @@
 var EventEmitter = require('events').EventEmitter
 
+var http = require('http')
 var onFinished = require('..')
 var should = require('should')
 
@@ -59,18 +60,43 @@ describe('when the socket closes', function () {
   })
 })
 
-describe('when the request finishes', function () {
-  it('should execute the callback', function (done) {
-    var thingie = createThingie()
-    onFinished(thingie, done)
-    thingie.emit('finish')
-  })
-})
-
 describe('when an emitter emits a non-error', function () {
   it('should ignore the error', function (done) {
     var thingie = createThingie()
     onFinished(thingie, done)
     thingie.socket.emit('close', false)
+  })
+})
+
+describe('http', function () {
+  describe('when the request finishes', function () {
+    it('should execute the callback', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, done)
+        setTimeout(res.end.bind(res), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        http.get('http://127.0.0.1:' + port, function (res) {
+          res.resume()
+          res.on('close', server.close.bind(server))
+        })
+      })
+    })
+  })
+
+  describe('when the request aborts', function () {
+    it('should execute the callback', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        onFinished(res, done)
+        setTimeout(client.abort.bind(client), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        client = http.get('http://127.0.0.1:' + port)
+        client.on('error', function () {})
+      })
+    })
   })
 })
