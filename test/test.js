@@ -1,6 +1,7 @@
 var EventEmitter = require('events').EventEmitter
 
-var onFinished = require('./')
+var onFinished = require('..')
+var should = require('should')
 
 function createThingie() {
   var ee = new EventEmitter
