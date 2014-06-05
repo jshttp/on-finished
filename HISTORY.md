@@ -1,5 +1,5 @@
-unreleased
-==========
+1.2.0 / 2014-06-05
+==================
 
   * call callback when called on already-finished socket
 
