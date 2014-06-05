@@ -2,6 +2,7 @@
 
 [![NPM Version](https://badge.fury.io/js/finished.svg)](http://badge.fury.io/js/finished)
 [![Build Status](https://travis-ci.org/expressjs/finished.svg?branch=master)](https://travis-ci.org/expressjs/finished)
+[![Coverage Status](https://img.shields.io/coveralls/expressjs/finished.svg?branch=master)](https://coveralls.io/r/expressjs/finished)
 
 Execute a callback when a request closes, finishes, or errors.
 
