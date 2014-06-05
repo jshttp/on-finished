@@ -1,4 +1,7 @@
-# finished [![Build Status](https://travis-ci.org/expressjs/finished.svg?branch=master)](https://travis-ci.org/expressjs/finished) [![NPM Version](https://badge.fury.io/js/finished.svg)](http://badge.fury.io/js/finished)
+# finished
+
+[![NPM Version](https://badge.fury.io/js/finished.svg)](http://badge.fury.io/js/finished)
+[![Build Status](https://travis-ci.org/expressjs/finished.svg?branch=master)](https://travis-ci.org/expressjs/finished)
 
 Execute a callback when a request closes, finishes, or errors.
 
