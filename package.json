@@ -9,14 +9,7 @@
     "twitter": "https://twitter.com/jongleberry"
   },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/expressjs/finished.git"
-  },
-  "bugs": {
-    "mail": "me@jongleberry.com",
-    "url": "https://github.com/expressjs/finished/issues"
-  },
+  "repository": "expressjs/finished",
   "devDependencies": {
     "mocha": "*",
     "should": "*"
