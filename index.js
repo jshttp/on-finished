@@ -8,7 +8,8 @@ module.exports = function (thingie, callback) {
   var res = thingie.res || thingie
 
   if (res.finished || !socket.writable) {
-    return defer(callback)
+    defer(callback)
+    return thingie
   }
 
   socket.on('error', done)

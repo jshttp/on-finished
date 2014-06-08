@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * fix returned value when already finished
+
 1.2.0 / 2014-06-05
 ==================
 
