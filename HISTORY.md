@@ -1,5 +1,5 @@
-unreleased
-==========
+1.2.1 / 2014-06-08
+==================
 
   * fix returned value when already finished
 
