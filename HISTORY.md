@@ -1,3 +1,9 @@
+unreleased
+==========
+
+  * reduce listeners added to emitters
+    - avoids "event emitter leak" warnings when used multiple times on same request
+
 1.2.1 / 2014-06-08
 ==================
 

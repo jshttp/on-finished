@@ -5,6 +5,12 @@
  */
 
 /**
+* Module dependencies.
+*/
+
+var first = require('ee-first')
+
+/**
 * Variables.
 */
 
@@ -32,17 +38,25 @@ module.exports = function finished(thingie, callback) {
     return thingie
   }
 
-  socket.on('error', done)
-  socket.on('close', done)
-  res.on('finish', done)
+  var listener = res.__onFinished
 
-  function done(err) {
-    if (err != null && !(err instanceof Error)) err = null; // suck it node
-    socket.removeListener('error', done)
-    socket.removeListener('close', done)
-    res.removeListener('finish', done)
-    callback(err)
+  // create a private single listener with queue
+  if (!listener || !listener.queue) {
+    listener = res.__onFinished = function onFinished(err) {
+      if (res.__onFinished === listener) res.__onFinished = null
+      var queue = listener.queue || []
+      while (queue.length) queue.shift()(err)
+    }
+    listener.queue = []
+
+    // finished on first event
+    first([
+      [socket, 'error', 'close'],
+      [res, 'finish'],
+    ], listener)
   }
+
+  listener.queue.push(callback)
 
   return thingie
 }
