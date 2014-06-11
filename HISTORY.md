@@ -1,4 +1,4 @@
-unreleased
+1.2.2 / 2014-06-10
 ==========
 
   * reduce listeners added to emitters
