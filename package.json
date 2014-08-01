@@ -9,7 +9,7 @@
     "ee-first": "1.0.3"
   },
   "devDependencies": {
-    "istanbul": "0.2.10",
+    "istanbul": "0.3.0",
     "mocha": "~1.20.1",
     "should": "~4.0.1"
   },
