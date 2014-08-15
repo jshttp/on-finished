@@ -1,5 +1,10 @@
-1.2.2 / 2014-06-10
+unreleased
 ==========
+
+  * deps: ee-first@1.0.5
+
+1.2.2 / 2014-06-10
+==================
 
   * reduce listeners added to emitters
     - avoids "event emitter leak" warnings when used multiple times on same request

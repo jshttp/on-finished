@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": "expressjs/finished",
   "dependencies": {
-    "ee-first": "1.0.3"
+    "ee-first": "1.0.5"
   },
   "devDependencies": {
     "istanbul": "0.3.0",
