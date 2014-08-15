@@ -7,21 +7,11 @@
 
 Execute a callback when a request closes, finishes, or errors.
 
-#### Install
+## Install
 
 ```sh
 $ npm install finished
 ```
-
-#### Uses
-
-This is useful for cleaning up streams. For example, you want to destroy any file streams you create on socket errors otherwise you will leak file descriptors.
-
-This is required to fix what many perceive as issues with node's streams. Relevant:
-
-- [node#6041](https://github.com/joyent/node/issues/6041)
-- [koa#184](https://github.com/koajs/koa/issues/184)
-- [koa#165](https://github.com/koajs/koa/issues/165)
 
 ## API
 
@@ -35,33 +25,23 @@ onFinished(res, function (err) {
 })
 ```
 
-### Examples
+### Example
 
-The following code ensures that file descriptors are always closed once the response finishes.
-
-#### Node / Connect / Express
+The following code ensures that file descriptors are always closed
+once the response finishes.
 
 ```js
+var destroy = require('destroy')
+var http = require('http')
 var onFinished = require('finished')
 
-function (req, res, next) {
-  var stream = fs.createReadStream('thingie.json')
+http.createServer(function onRequest(req, res) {
+  var stream = fs.createReadStream('package.json')
   stream.pipe(res)
   onFinished(res, function (err) {
-    stream.destroy()
+    destroy(stream)
   })
-}
-```
-
-#### Koa
-
-```js
-function* () {
-  var stream = this.body = fs.createReadStream('thingie.json')
-  onFinished(this, function (err) {
-    stream.destroy()
-  })
-}
+})
 ```
 
 ## License
