@@ -21,8 +21,8 @@
     "index.js"
   ],
   "scripts": {
-    "test": "mocha --reporter spec test/",
-    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec test/"
+    "test": "mocha --reporter spec --bail --check-leaks test/",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/"
   }
 }
