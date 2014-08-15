@@ -1,8 +1,9 @@
 # finished
 
-[![NPM Version](https://badge.fury.io/js/finished.svg)](http://badge.fury.io/js/finished)
-[![Build Status](https://travis-ci.org/expressjs/finished.svg?branch=master)](https://travis-ci.org/expressjs/finished)
-[![Coverage Status](https://img.shields.io/coveralls/expressjs/finished.svg?branch=master)](https://coveralls.io/r/expressjs/finished)
+[![NPM Version](http://img.shields.io/npm/v/finished.svg?style=flat)](https://www.npmjs.org/package/finished)
+[![Node.js Version](http://img.shields.io/badge/node.js->=_0.8-blue.svg?style=flat)](http://nodejs.org/download/)
+[![Build Status](http://img.shields.io/travis/expressjs/finished.svg?style=flat)](https://travis-ci.org/expressjs/finished)
+[![Coverage Status](https://img.shields.io/coveralls/expressjs/finished.svg?style=flat)](https://coveralls.io/r/expressjs/finished)
 
 Execute a callback when a request closes, finishes, or errors.
 
