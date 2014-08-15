@@ -16,6 +16,11 @@
   "engine": {
     "node": ">= 0.8.0"
   },
+  "files": [
+    "HISTORY.md",
+    "LICENSE",
+    "index.js"
+  ],
   "scripts": {
     "test": "mocha --reporter spec test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot test/",
