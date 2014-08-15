@@ -1,70 +1,12 @@
 
-var EventEmitter = require('events').EventEmitter
-var should = require('should')
 var assert = require('assert')
 var http = require('http')
-
+var net = require('net')
 var onFinished = require('..')
 
-function createThingie() {
-  var ee = new EventEmitter
-  ee.socket = new EventEmitter
-  ee.socket.writable = true
-  return ee
-}
-
-describe('on socket error', function () {
-  it('should execute the callback on socket error', function () {
-    var thingie = createThingie()
-    var called = false
-    onFinished(thingie, function (err) {
-      called = true
-      err.message.should.equal('boom')
-    })
-    thingie.socket.emit('error', new Error('boom'))
-    called.should.be.true
-  })
-
-  it('should not execute the callback if response is finished', function (done) {
-    var thingie = createThingie()
-    onFinished(thingie, function (err) {
-      assert.ifError(err)
-      done()
-    })
-    thingie.emit('finish')
-    thingie.socket.emit(new Error('boom'))
-  })
-})
-
-describe('when the socket is not writable', function () {
-  it('should execute the callback immediately', function (done) {
-    var thingie = createThingie()
-    thingie.socket.writable = false
-    onFinished(thingie, function (err) {
-      done()
-    })
-  })
-})
-
-describe('when the socket closes', function () {
-  it('should execute the callback', function (done) {
-    var thingie = createThingie()
-    onFinished(thingie, done)
-    thingie.socket.emit('close')
-  })
-})
-
-describe('when an emitter emits a non-error', function () {
-  it('should ignore the error', function (done) {
-    var thingie = createThingie()
-    onFinished(thingie, done)
-    thingie.socket.emit('close', false)
-  })
-})
-
-describe('http', function () {
-  describe('when the request finishes', function () {
-    it('should execute the callback', function (done) {
+describe('finished', function () {
+  describe('when the response finishes', function () {
+    it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, done)
         setTimeout(res.end.bind(res), 0)
@@ -78,7 +20,7 @@ describe('http', function () {
       })
     })
 
-    it('should execute the callback when called after finish', function (done) {
+    it('should fire when called after finish', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, function () {
           onFinished(res, done)
@@ -95,7 +37,57 @@ describe('http', function () {
     })
   })
 
-  describe('when the request aborts', function () {
+  describe('when using keep-alive', function () {
+    it('should fire for each response', function (done) {
+      var called = false
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function () {
+          if (called) {
+            socket.end()
+            server.close()
+            done(called !== req ? null : new Error('fired twice on same req'))
+            return
+          }
+
+          called = req
+
+          writerequest(socket)
+        })
+
+        res.end()
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this)
+        })
+      })
+    })
+  })
+
+  describe('when response errors', function () {
+    it('should fire with error', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err) {
+          assert.ok(err)
+          done()
+        })
+
+        socket.on('error', noop)
+        socket.write('W')
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this, true)
+        })
+      })
+    })
+  })
+
+  describe('when the response aborts', function () {
     it('should execute the callback', function (done) {
       var client
       var server = http.createServer(function (req, res) {
@@ -105,48 +97,64 @@ describe('http', function () {
       server.listen(function () {
         var port = this.address().port
         client = http.get('http://127.0.0.1:' + port)
-        client.on('error', function () {})
+        client.on('error', noop)
+      })
+    })
+  })
+
+  describe('when calling many times on same response', function () {
+    it('should not print warnings', function (done) {
+      var server = http.createServer(function (req, res) {
+        var stderr = captureStderr(function () {
+          for (var i = 0; i < 400; i++) {
+            onFinished(res, noop)
+          }
+        })
+
+        onFinished(res, done)
+        assert.equal(stderr, '')
+        res.end()
+      })
+
+      server.listen(function () {
+        var port = this.address().port
+        http.get('http://127.0.0.1:' + port, function (res) {
+          res.resume()
+          res.on('close', server.close.bind(server))
+        })
       })
     })
   })
 })
 
-describe('event emitter leaks', function () {
-  describe('when adding a lot of listeners on the same request', function () {
-    it('should not warn and add at most 1 listener per emitter per event', function () {
-      // we just have to make sure tests pass without a bunch of logs
-      var thingie = createThingie()
-      var called = false
+function captureStderr(fn) {
+  var chunks = []
+  var write = process.stderr.write
 
-      onFinished(thingie, function (err) {
-        called = true
-        err.message.should.equal('boom')
-      })
+  process.stderr.write = function write(chunk, encoding) {
+    chunks.push(new Buffer(chunk, encoding))
+  }
 
-      for (var i = 0; i < 1000; i++) {
-        onFinished(thingie, noop)
-      }
+  try {
+    fn()
+  } finally {
+    process.stderr.write = write
+  }
 
-      assert.equal(1, thingie.socket.listeners('error').length)
-      assert.equal(1, thingie.socket.listeners('close').length)
-      assert.equal(1, thingie.listeners('finish').length)
-
-      thingie.socket.emit('error', new Error('boom'))
-      called.should.be.true
-    })
-  })
-
-  it('should clean up after itself', function (done) {
-    var thingie = createThingie()
-    onFinished(thingie, function () {
-      assert(!thingie.socket.listeners('error').length)
-      assert(!thingie.socket.listeners('close').length)
-      assert(!thingie.listeners('finish').length)
-      done()
-    })
-
-    thingie.socket.emit('error')
-  })
-})
+  return Buffer.concat(chunks).toString('utf8')
+}
 
 function noop() {}
+
+function writerequest(socket, chunked) {
+  socket.write('GET / HTTP/1.1\r\n')
+  socket.write('Host: localhost\r\n')
+  socket.write('Connection: keep-alive\r\n')
+
+  if (chunked) {
+    socket.write('Transfer-Encoding: chunked\r\n')
+  }
+
+  socket.write('\r\n')
+  socket.write('\r\n')
+}
