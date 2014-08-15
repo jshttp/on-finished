@@ -29,13 +29,12 @@ var defer = typeof setImmediate === 'function'
  * @api public
  */
 
-module.exports = function finished(thingie, callback) {
-  var socket = thingie.socket || thingie
-  var res = thingie.res || thingie
+module.exports = function finished(res, callback) {
+  var socket = res.socket
 
   if (res.finished || !socket.writable) {
     defer(callback)
-    return thingie
+    return res
   }
 
   var listener = res.__onFinished
@@ -58,5 +57,5 @@ module.exports = function finished(thingie, callback) {
 
   listener.queue.push(callback)
 
-  return thingie
+  return res
 }
