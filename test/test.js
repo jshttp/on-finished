@@ -4,7 +4,7 @@ var http = require('http')
 var net = require('net')
 var onFinished = require('..')
 
-describe('finished(res, listener)', function () {
+describe('onFinished(res, listener)', function () {
   describe('when the response finishes', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
@@ -184,7 +184,7 @@ describe('isFinished(res)', function () {
   })
 })
 
-describe('finished(req, listener)', function () {
+describe('onFinished(req, listener)', function () {
   describe('when the request finishes', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {

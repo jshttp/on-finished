@@ -2,7 +2,9 @@ unreleased
 ==========
 
   * add `isFinished` function
+  * move to `jshttp` organization
   * remove support for non-`res` argument
+  * rename to `on-finished`
   * support both `req` and `res` as arguments
   * deps: ee-first@1.0.5
 

@@ -1,5 +1,5 @@
 /*!
- * finished
+ * on-finished
  * Copyright(c) 2013 Jonathan Ong
  * Copyright(c) 2014 Douglas Christopher Wilson
  * MIT Licensed
@@ -9,7 +9,7 @@
  * Module exports.
  */
 
-module.exports = finished;
+module.exports = onFinished;
 module.exports.isFinished = isFinished;
 
 
@@ -38,7 +38,7 @@ var defer = typeof setImmediate === 'function'
  * @api public
  */
 
-function finished(msg, callback) {
+function onFinished(msg, callback) {
   var socket = msg.socket
 
   if (isFinished(msg)) {
