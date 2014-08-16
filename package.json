@@ -2,9 +2,9 @@
   "name": "on-finished",
   "description": "Execute a callback when a request closes, finishes, or errors",
   "version": "0.0.0",
-  "author": "Jonathan Ong <me@jongleberry.com> (http://jongleberry.com)",
   "contributors": [
-    "Douglas Christopher Wilson <doug@somethingdoug.com>"
+    "Douglas Christopher Wilson <doug@somethingdoug.com>",
+    "Jonathan Ong <me@jongleberry.com> (http://jongleberry.com)"
   ],
   "license": "MIT",
   "repository": "jshttp/on-finished",
