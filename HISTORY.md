@@ -2,6 +2,7 @@ unreleased
 ==========
 
   * remove support for non-`res` argument
+  * support both `req` and `res` as arguments
   * deps: ee-first@1.0.5
 
 1.2.2 / 2014-06-10

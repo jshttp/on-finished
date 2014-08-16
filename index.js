@@ -29,20 +29,20 @@ var defer = typeof setImmediate === 'function'
  * @api public
  */
 
-module.exports = function finished(res, callback) {
-  var socket = res.socket
+module.exports = function finished(msg, callback) {
+  var socket = msg.socket
 
-  if (res.finished || !socket.writable) {
+  if (msg.finished || !socket.writable) {
     defer(callback)
-    return res
+    return msg
   }
 
-  var listener = res.__onFinished
+  var listener = msg.__onFinished
 
   // create a private single listener with queue
   if (!listener || !listener.queue) {
-    listener = res.__onFinished = function onFinished(err) {
-      if (res.__onFinished === listener) res.__onFinished = null
+    listener = msg.__onFinished = function onFinished(err) {
+      if (msg.__onFinished === listener) msg.__onFinished = null
       var queue = listener.queue || []
       while (queue.length) queue.shift()(err)
     }
@@ -51,11 +51,11 @@ module.exports = function finished(res, callback) {
     // finished on first event
     first([
       [socket, 'error', 'close'],
-      [res, 'finish'],
+      [msg, 'end', 'finish'],
     ], listener)
   }
 
   listener.queue.push(callback)
 
-  return res
+  return msg
 }

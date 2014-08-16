@@ -15,13 +15,43 @@ $ npm install finished
 
 ## API
 
-### finished(response, callback)
+### finished(res, listener)
+
+Attach a listener to listen for the response to finish. The listener will
+be invoked only once when the response finished. If the response finished
+to to an error, the first argument will contain the error.
+
+Listening to the end of a response would be used to close things associated
+with the response, like open files.
 
 ```js
 var onFinished = require('finished')
 
 onFinished(res, function (err) {
   // do something maybe
+})
+```
+
+### finished(req, listener)
+
+Attach a listener to listen for the request to finish. The listener will
+be invoked only once when the request finished. If the request finished
+to to an error, the first argument will contain the error.
+
+Listening to the end of a request would be used to know when to continue
+after reading the data.
+
+```js
+var data = ''
+var onFinished = require('finished')
+
+req.setEncoding('utf8')
+res.on('data', function (str) {
+  data += str
+})
+
+onFinished(req, function (err) {
+  // if err, data is probably incomplete
 })
 ```
 
