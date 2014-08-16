@@ -33,38 +33,19 @@ var defer = typeof setImmediate === 'function'
  * cleaning up resources afterwards.
  *
  * @param {object} msg
- * @param {function} callback
+ * @param {function} listener
  * @return {object}
  * @api public
  */
 
-function onFinished(msg, callback) {
-  var socket = msg.socket
-
+function onFinished(msg, listener) {
   if (isFinished(msg)) {
-    defer(callback)
+    defer(listener)
     return msg
   }
 
-  var listener = msg.__onFinished
-
-  // create a private single listener with queue
-  if (!listener || !listener.queue) {
-    listener = msg.__onFinished = function onFinished(err) {
-      if (msg.__onFinished === listener) msg.__onFinished = null
-      var queue = listener.queue || []
-      while (queue.length) queue.shift()(err)
-    }
-    listener.queue = []
-
-    // finished on first event
-    first([
-      [socket, 'error', 'close'],
-      [msg, 'end', 'finish'],
-    ], listener)
-  }
-
-  listener.queue.push(callback)
+  // attach the listener to the message
+  attachListener(msg, listener)
 
   return msg
 }
@@ -82,4 +63,56 @@ function isFinished(msg) {
   return msg.finished === true
     || msg.complete === true
     || msg.socket.writable === false
+}
+
+/**
+ * Attach the listener to the message.
+ *
+ * @param {object} msg
+ * @return {function}
+ * @api private
+ */
+
+function attachListener(msg, listener) {
+  var attached = msg.__onFinished
+  var socket = msg.socket
+
+  // create a private single listener with queue
+  if (!attached || !attached.queue) {
+    attached = msg.__onFinished = createListener(msg)
+
+    // finished on first event
+    first([
+      [socket, 'error', 'close'],
+      [msg, 'end', 'finish'],
+    ], attached)
+  }
+
+  attached.queue.push(listener)
+}
+
+/**
+ * Create listener on message.
+ *
+ * @param {object} msg
+ * @return {function}
+ * @api private
+ */
+
+function createListener(msg) {
+  function listener(err) {
+    if (msg.__onFinished === listener) msg.__onFinished = null
+    if (!listener.queue) return
+
+    var queue = listener.queue
+    listener.queue = null
+
+    for (var i = 0; i < queue.length; i++) {
+      queue[i](err)
+    }
+  }
+
+  listener.queue = []
+
+  return listener
 }
