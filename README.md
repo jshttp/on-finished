@@ -15,7 +15,11 @@ $ npm install finished
 
 ## API
 
-### finished(res, listener)
+```js
+var onFinished = require('finished')
+```
+
+### onFinished(res, listener)
 
 Attach a listener to listen for the response to finish. The listener will
 be invoked only once when the response finished. If the response finished
@@ -25,14 +29,12 @@ Listening to the end of a response would be used to close things associated
 with the response, like open files.
 
 ```js
-var onFinished = require('finished')
-
 onFinished(res, function (err) {
   // do something maybe
 })
 ```
 
-### finished(req, listener)
+### onFinished(req, listener)
 
 Attach a listener to listen for the request to finish. The listener will
 be invoked only once when the request finished. If the request finished
@@ -43,7 +45,6 @@ after reading the data.
 
 ```js
 var data = ''
-var onFinished = require('finished')
 
 req.setEncoding('utf8')
 res.on('data', function (str) {
@@ -54,6 +55,16 @@ onFinished(req, function (err) {
   // if err, data is probably incomplete
 })
 ```
+
+### onFinished.isFinished(res)
+
+Determine if `res` is already finished. This would be useful to check and
+not even start certain operations if the response has already finished.
+
+### onFinished.isFinished(req)
+
+Determine if `req` is already finished. This would be useful to check and
+not even start certain operations if the request has already finished.
 
 ### Example
 

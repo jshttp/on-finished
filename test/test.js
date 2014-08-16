@@ -11,13 +11,8 @@ describe('finished(res, listener)', function () {
         onFinished(res, done)
         setTimeout(res.end.bind(res), 0)
       })
-      server.listen(function () {
-        var port = this.address().port
-        http.get('http://127.0.0.1:' + port, function (res) {
-          res.resume()
-          res.on('close', server.close.bind(server))
-        })
-      })
+
+      sendget(server)
     })
 
     it('should fire when called after finish', function (done) {
@@ -27,13 +22,8 @@ describe('finished(res, listener)', function () {
         })
         setTimeout(res.end.bind(res), 0)
       })
-      server.listen(function () {
-        var port = this.address().port
-        http.get('http://127.0.0.1:' + port, function (res) {
-          res.resume()
-          res.on('close', server.close.bind(server))
-        })
-      })
+
+      sendget(server)
     })
   })
 
@@ -127,6 +117,73 @@ describe('finished(res, listener)', function () {
   })
 })
 
+describe('isFinished(res)', function () {
+  it('should be false before response finishes', function (done) {
+    var server = http.createServer(function (req, res) {
+      assert.ok(!onFinished.isFinished(res))
+      res.end()
+      done()
+    })
+
+    sendget(server)
+  })
+
+  it('should be true after response finishes', function (done) {
+    var server = http.createServer(function (req, res) {
+      onFinished(res, function (err) {
+        assert.ifError(err)
+        assert.ok(onFinished.isFinished(res))
+        done()
+      })
+
+      res.end()
+    })
+
+    sendget(server)
+  })
+
+  describe('when response errors', function () {
+    it('should return true', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err) {
+          assert.ok(err)
+          assert.ok(onFinished.isFinished(res))
+          done()
+        })
+
+        socket.on('error', noop)
+        socket.write('W')
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this, true)
+        })
+      })
+    })
+  })
+
+  describe('when the response aborts', function () {
+    it('should return true', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.ok(onFinished.isFinished(res))
+          done()
+        })
+        setTimeout(client.abort.bind(client), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        client = http.get('http://127.0.0.1:' + port)
+        client.on('error', noop)
+      })
+    })
+  })
+})
+
 describe('finished(req, listener)', function () {
   describe('when the request finishes', function () {
     it('should fire the callback', function (done) {
@@ -135,13 +192,8 @@ describe('finished(req, listener)', function () {
         req.resume()
         setTimeout(res.end.bind(res), 0)
       })
-      server.listen(function () {
-        var port = this.address().port
-        http.get('http://127.0.0.1:' + port, function (res) {
-          res.resume()
-          res.on('close', server.close.bind(server))
-        })
-      })
+
+      sendget(server)
     })
 
     it('should fire when called after finish', function (done) {
@@ -152,13 +204,8 @@ describe('finished(req, listener)', function () {
         req.resume()
         setTimeout(res.end.bind(res), 0)
       })
-      server.listen(function () {
-        var port = this.address().port
-        http.get('http://127.0.0.1:' + port, function (res) {
-          res.resume()
-          res.on('close', server.close.bind(server))
-        })
-      })
+
+      sendget(server)
     })
   })
 
@@ -264,6 +311,75 @@ describe('finished(req, listener)', function () {
   })
 })
 
+describe('isFinished(req)', function () {
+  it('should be false before request finishes', function (done) {
+    var server = http.createServer(function (req, res) {
+      assert.ok(!onFinished.isFinished(req))
+      req.resume()
+      res.end()
+      done()
+    })
+
+    sendget(server)
+  })
+
+  it('should be true after request finishes', function (done) {
+    var server = http.createServer(function (req, res) {
+      onFinished(req, function (err) {
+        assert.ifError(err)
+        assert.ok(onFinished.isFinished(req))
+        done()
+      })
+
+      req.resume()
+      res.end()
+    })
+
+    sendget(server)
+  })
+
+  describe('when request errors', function () {
+    it('should return true', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (err) {
+          assert.ok(err)
+          assert.ok(onFinished.isFinished(req))
+          done()
+        })
+
+        socket.on('error', noop)
+        socket.write('W')
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this, true)
+        })
+      })
+    })
+  })
+
+  describe('when the request aborts', function () {
+    it('should return true', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.ok(onFinished.isFinished(req))
+          done()
+        })
+        setTimeout(client.abort.bind(client), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        client = http.get('http://127.0.0.1:' + port)
+        client.on('error', noop)
+      })
+    })
+  })
+})
+
 function captureStderr(fn) {
   var chunks = []
   var write = process.stderr.write
@@ -282,6 +398,16 @@ function captureStderr(fn) {
 }
 
 function noop() {}
+
+function sendget(server) {
+  server.listen(function onListening() {
+    var port = this.address().port
+    http.get('http://127.0.0.1:' + port, function onResponse(res) {
+      res.resume()
+      res.on('close', server.close.bind(server))
+    })
+  })
+}
 
 function writerequest(socket, chunked) {
   socket.write('GET / HTTP/1.1\r\n')

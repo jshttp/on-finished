@@ -5,6 +5,14 @@
  */
 
 /**
+ * Module exports.
+ */
+
+module.exports = finished;
+module.exports.isFinished = isFinished;
+
+
+/**
 * Module dependencies.
 */
 
@@ -23,16 +31,16 @@ var defer = typeof setImmediate === 'function'
  * Invoke callback when the response has finished, useful for
  * cleaning up resources afterwards.
  *
- * @param {object} thingie
+ * @param {object} msg
  * @param {function} callback
  * @return {object}
  * @api public
  */
 
-module.exports = function finished(msg, callback) {
+function finished(msg, callback) {
   var socket = msg.socket
 
-  if (msg.finished || !socket.writable) {
+  if (isFinished(msg)) {
     defer(callback)
     return msg
   }
@@ -58,4 +66,19 @@ module.exports = function finished(msg, callback) {
   listener.queue.push(callback)
 
   return msg
+}
+
+/**
+ * Determine is message is already finished.
+ *
+ * @param {object} msg
+ * @return {boolean}
+ * @api public
+ */
+
+function isFinished(msg) {
+  // finished for OutgoingMessage, complete for IncomingMessage
+  return msg.finished === true
+    || msg.complete === true
+    || msg.socket.writable === false
 }
