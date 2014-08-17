@@ -30,7 +30,7 @@ with the response, like open files.
 
 ```js
 onFinished(res, function (err) {
-  // do something maybe
+  // clean up open fds, etc.
 })
 ```
 
@@ -52,7 +52,7 @@ res.on('data', function (str) {
 })
 
 onFinished(req, function (err) {
-  // if err, data is probably incomplete
+  // data is read unless there is err
 })
 ```
 
