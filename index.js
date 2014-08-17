@@ -12,7 +12,6 @@
 module.exports = onFinished;
 module.exports.isFinished = isFinished;
 
-
 /**
 * Module dependencies.
 */
@@ -39,7 +38,7 @@ var defer = typeof setImmediate === 'function'
  */
 
 function onFinished(msg, listener) {
-  if (isFinished(msg)) {
+  if (isFinished(msg) !== false) {
     defer(listener)
     return msg
   }
@@ -59,10 +58,20 @@ function onFinished(msg, listener) {
  */
 
 function isFinished(msg) {
-  // finished for OutgoingMessage, complete for IncomingMessage
-  return msg.finished === true
-    || msg.complete === true
-    || msg.socket.writable === false
+  var socket = msg.socket
+
+  if (typeof msg.finished === 'boolean') {
+    // OutgoingMessage
+    return Boolean(!socket || msg.finished || !socket.writable)
+  }
+
+  if (typeof msg.complete === 'boolean') {
+    // IncomingMessage
+    return Boolean(!socket || msg.complete || !socket.readable)
+  }
+
+  // don't know
+  return undefined
 }
 
 /**

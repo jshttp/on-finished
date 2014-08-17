@@ -5,6 +5,10 @@ var net = require('net')
 var onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
+  it('should invoke listener given an unknwon object', function (done) {
+    onFinished({}, done)
+  })
+
   describe('when the response finishes', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
@@ -118,6 +122,10 @@ describe('onFinished(res, listener)', function () {
 })
 
 describe('isFinished(res)', function () {
+  it('should return undefined for unknown object', function () {
+    assert.strictEqual(onFinished.isFinished({}), undefined)
+  })
+
   it('should be false before response finishes', function (done) {
     var server = http.createServer(function (req, res) {
       assert.ok(!onFinished.isFinished(res))
@@ -312,6 +320,14 @@ describe('onFinished(req, listener)', function () {
 })
 
 describe('isFinished(req)', function () {
+  it('should invoke listener given an unknwon object', function (done) {
+    onFinished({}, done)
+  })
+
+  it('should return undefined for unknown object', function () {
+    assert.strictEqual(onFinished.isFinished({}), undefined)
+  })
+
   it('should be false before request finishes', function (done) {
     var server = http.createServer(function (req, res) {
       assert.ok(!onFinished.isFinished(req))
