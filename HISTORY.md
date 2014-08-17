@@ -1,5 +1,5 @@
-unreleased
-==========
+2.1.0 / 2014-08-16
+==================
 
   * Check if `socket` is detached
   * Return `undefined` for `isFinished` if state unknown
