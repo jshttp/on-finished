@@ -1,6 +1,7 @@
 # on-finished
 
 [![NPM Version](http://img.shields.io/npm/v/on-finished.svg?style=flat)](https://www.npmjs.org/package/on-finished)
+[![NPM Downloads](https://img.shields.io/npm/dm/on-finished.svg?style=flat)](https://www.npmjs.org/package/on-finished)
 [![Node.js Version](http://img.shields.io/badge/node.js->=_0.8-brightgreen.svg?style=flat)](http://nodejs.org/download/)
 [![Build Status](http://img.shields.io/travis/jshttp/on-finished.svg?style=flat)](https://travis-ci.org/jshttp/on-finished)
 [![Coverage Status](https://img.shields.io/coveralls/jshttp/on-finished.svg?style=flat)](https://coveralls.io/r/jshttp/on-finished)
