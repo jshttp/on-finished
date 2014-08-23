@@ -75,7 +75,7 @@ once the response finishes.
 ```js
 var destroy = require('destroy')
 var http = require('http')
-var onFinished = require('finished')
+var onFinished = require('on-finished')
 
 http.createServer(function onRequest(req, res) {
   var stream = fs.createReadStream('package.json')
