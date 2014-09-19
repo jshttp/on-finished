@@ -50,7 +50,7 @@ function onFinished(msg, listener) {
 }
 
 /**
- * Determine is message is already finished.
+ * Determine if message is already finished.
  *
  * @param {object} msg
  * @return {boolean}
