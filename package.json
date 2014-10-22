@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": "jshttp/on-finished",
   "dependencies": {
-    "ee-first": "1.0.5"
+    "ee-first": "1.1.0"
   },
   "devDependencies": {
     "istanbul": "0.3.2",

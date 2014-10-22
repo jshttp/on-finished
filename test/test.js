@@ -60,6 +60,64 @@ describe('onFinished(res, listener)', function () {
     })
   })
 
+  describe('when requests pipelined', function () {
+    it('should fire for each request', function (done) {
+      var count = 0
+      var responses = []
+      var server = http.createServer(function (req, res) {
+        responses.push(res)
+
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.equal(responses[0], res)
+          responses.shift()
+
+          if (responses.length === 0) {
+            socket.end()
+            return
+          }
+
+          responses[0].end('response b')
+        })
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+
+          if (++count !== 2) {
+            return
+          }
+
+          assert.equal(responses.length, 2)
+          responses[0].end('response a')
+        })
+
+        if (responses.length === 1) {
+          // second request
+          writerequest(socket)
+        }
+
+        req.resume()
+      })
+      var socket
+
+      server.listen(function () {
+        var data = ''
+        socket = net.connect(this.address().port, function () {
+          writerequest(this)
+        })
+
+        socket.on('data', function (chunk) {
+          data += chunk.toString('binary')
+        })
+        socket.on('end', function () {
+          assert.ok(/response a/.test(data))
+          assert.ok(/response b/.test(data))
+          server.close(done)
+        })
+      })
+    })
+  })
+
   describe('when response errors', function () {
     it('should fire with error', function (done) {
       var server = http.createServer(function (req, res) {
@@ -148,6 +206,82 @@ describe('isFinished(res)', function () {
     })
 
     sendget(server)
+  })
+
+  describe('when requests pipelined', function () {
+    it('should have correct state when socket shared', function (done) {
+      var count = 0
+      var responses = []
+      var server = http.createServer(function (req, res) {
+        responses.push(res)
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+
+          if (++count !== 2) {
+            return
+          }
+
+          assert.ok(!onFinished.isFinished(responses[0]))
+          assert.ok(!onFinished.isFinished(responses[1]))
+
+          responses[0].end()
+          responses[1].end()
+          socket.end()
+          server.close(done)
+        })
+
+        if (responses.length === 1) {
+          // second request
+          writerequest(socket)
+        }
+
+        req.resume()
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this)
+        })
+      })
+    })
+
+    it('should handle aborted requests', function (done) {
+      var count = 0
+      var requests = 0
+      var server = http.createServer(function (req, res) {
+        requests++
+
+        onFinished(req, function (err) {
+          switch (++count) {
+            case 1:
+              assert.ifError(err)
+              // abort the socket
+              socket.on('error', noop)
+              socket.destroy()
+              break
+            case 2:
+              server.close(done)
+              break
+          }
+        })
+
+        req.resume()
+
+        if (requests === 1) {
+          // second request
+          writerequest(socket, true)
+        }
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this)
+        })
+      })
+    })
   })
 
   describe('when response errors', function () {

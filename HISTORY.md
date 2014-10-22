@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Fix handling of pipelined requests
+
 2.1.0 / 2014-08-16
 ==================
 
