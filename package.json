@@ -15,8 +15,8 @@
     "istanbul": "0.3.2",
     "mocha": "~1.21.4"
   },
-  "engine": {
-    "node": ">= 0.8.0"
+  "engines": {
+    "node": ">= 0.8"
   },
   "files": [
     "HISTORY.md",
