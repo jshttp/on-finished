@@ -1,10 +1,10 @@
 # on-finished
 
-[![NPM Version](http://img.shields.io/npm/v/on-finished.svg?style=flat)](https://www.npmjs.org/package/on-finished)
-[![NPM Downloads](https://img.shields.io/npm/dm/on-finished.svg?style=flat)](https://www.npmjs.org/package/on-finished)
-[![Node.js Version](http://img.shields.io/badge/node.js->=_0.8-brightgreen.svg?style=flat)](http://nodejs.org/download/)
-[![Build Status](http://img.shields.io/travis/jshttp/on-finished.svg?style=flat)](https://travis-ci.org/jshttp/on-finished)
-[![Coverage Status](https://img.shields.io/coveralls/jshttp/on-finished.svg?style=flat)](https://coveralls.io/r/jshttp/on-finished)
+[![NPM Version][npm-image]][npm-url]
+[![NPM Downloads][downloads-image]][downloads-url]
+[![Node.js Version][node-version-image]][node-version-url]
+[![Build Status][travis-image]][travis-url]
+[![Test Coverage][coveralls-image]][coveralls-url]
 
 Execute a callback when a request closes, finishes, or errors.
 
@@ -89,3 +89,14 @@ http.createServer(function onRequest(req, res) {
 ## License
 
 [MIT](LICENSE)
+
+[npm-image]: https://img.shields.io/npm/v/on-finished.svg?style=flat
+[npm-url]: https://npmjs.org/package/on-finished
+[node-version-image]: https://img.shields.io/node/v/on-finished.svg?style=flat
+[node-version-url]: http://nodejs.org/download/
+[travis-image]: https://img.shields.io/travis/jshttp/on-finished.svg?style=flat
+[travis-url]: https://travis-ci.org/jshttp/on-finished
+[coveralls-image]: https://img.shields.io/coveralls/jshttp/on-finished.svg?style=flat
+[coveralls-url]: https://coveralls.io/r/jshttp/on-finished?branch=master
+[downloads-image]: https://img.shields.io/npm/dm/on-finished.svg?style=flat
+[downloads-url]: https://npmjs.org/package/on-finished
