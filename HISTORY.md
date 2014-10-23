@@ -1,5 +1,5 @@
-unreleased
-==========
+2.1.1 / 2014-10-22
+==================
 
   * Fix handling of pipelined requests
 
