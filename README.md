@@ -30,9 +30,12 @@ has already finished, the listener will be invoked.
 Listening to the end of a response would be used to close things associated
 with the response, like open files.
 
+Listener is invoked as `listener(err, res)`.
+
 ```js
-onFinished(res, function (err) {
+onFinished(res, function (err, res) {
   // clean up open fds, etc.
+  // err contains the error is request error'd
 })
 ```
 
@@ -46,6 +49,8 @@ has already finished, the listener will be invoked.
 Listening to the end of a request would be used to know when to continue
 after reading the data.
 
+Listener is invoked as `listener(err, req)`.
+
 ```js
 var data = ''
 
@@ -54,7 +59,7 @@ res.on('data', function (str) {
   data += str
 })
 
-onFinished(req, function (err) {
+onFinished(req, function (err, req) {
   // data is read unless there is err
 })
 ```

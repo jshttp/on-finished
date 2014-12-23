@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Add message object to callback arguments
+
 2.1.1 / 2014-10-22
 ==================
 

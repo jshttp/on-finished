@@ -5,7 +5,7 @@ var net = require('net')
 var onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
-  it('should invoke listener given an unknwon object', function (done) {
+  it('should invoke listener given an unknown object', function (done) {
     onFinished({}, done)
   })
 
@@ -13,6 +13,19 @@ describe('onFinished(res, listener)', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, done)
+        setTimeout(res.end.bind(res), 0)
+      })
+
+      sendget(server)
+    })
+
+    it('should include the response object', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err, msg) {
+          assert.ok(!err)
+          assert.equal(msg, res)
+          done()
+        })
         setTimeout(res.end.bind(res), 0)
       })
 
@@ -123,6 +136,26 @@ describe('onFinished(res, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
           assert.ok(err)
+          done()
+        })
+
+        socket.on('error', noop)
+        socket.write('W')
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this, true)
+        })
+      })
+    })
+
+    it('should include the response object', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err, msg) {
+          assert.ok(err)
+          assert.equal(msg, res)
           done()
         })
 
@@ -338,6 +371,20 @@ describe('onFinished(req, listener)', function () {
       sendget(server)
     })
 
+    it('should include the request objecy', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (err, msg) {
+          assert.ok(!err)
+          assert.equal(msg, req)
+          done()
+        })
+        req.resume()
+        setTimeout(res.end.bind(res), 0)
+      })
+
+      sendget(server)
+    })
+
     it('should fire when called after finish', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(req, function () {
@@ -397,6 +444,26 @@ describe('onFinished(req, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err) {
           assert.ok(err)
+          done()
+        })
+
+        socket.on('error', noop)
+        socket.write('W')
+      })
+      var socket
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writerequest(this, true)
+        })
+      })
+    })
+
+    it('should include the request objecy', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (err, msg) {
+          assert.ok(err)
+          assert.equal(msg, req)
           done()
         })
 
