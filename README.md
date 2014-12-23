@@ -24,7 +24,8 @@ var onFinished = require('on-finished')
 
 Attach a listener to listen for the response to finish. The listener will
 be invoked only once when the response finished. If the response finished
-to to an error, the first argument will contain the error.
+to to an error, the first argument will contain the error. If the response
+has already finished, the listener will be invoked.
 
 Listening to the end of a response would be used to close things associated
 with the response, like open files.
@@ -39,7 +40,8 @@ onFinished(res, function (err) {
 
 Attach a listener to listen for the request to finish. The listener will
 be invoked only once when the request finished. If the request finished
-to to an error, the first argument will contain the error.
+to to an error, the first argument will contain the error. If the request
+has already finished, the listener will be invoked.
 
 Listening to the end of a request would be used to know when to continue
 after reading the data.
