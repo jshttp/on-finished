@@ -97,13 +97,13 @@ http.createServer(function onRequest(req, res) {
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/on-finished.svg?style=flat
+[npm-image]: https://img.shields.io/npm/v/on-finished.svg
 [npm-url]: https://npmjs.org/package/on-finished
-[node-version-image]: https://img.shields.io/node/v/on-finished.svg?style=flat
+[node-version-image]: https://img.shields.io/node/v/on-finished.svg
 [node-version-url]: http://nodejs.org/download/
-[travis-image]: https://img.shields.io/travis/jshttp/on-finished.svg?style=flat
+[travis-image]: https://img.shields.io/travis/jshttp/on-finished/master.svg
 [travis-url]: https://travis-ci.org/jshttp/on-finished
-[coveralls-image]: https://img.shields.io/coveralls/jshttp/on-finished.svg?style=flat
+[coveralls-image]: https://img.shields.io/coveralls/jshttp/on-finished/master.svg
 [coveralls-url]: https://coveralls.io/r/jshttp/on-finished?branch=master
-[downloads-image]: https://img.shields.io/npm/dm/on-finished.svg?style=flat
+[downloads-image]: https://img.shields.io/npm/dm/on-finished.svg
 [downloads-url]: https://npmjs.org/package/on-finished
