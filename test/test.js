@@ -521,10 +521,6 @@ describe('onFinished(req, listener)', function () {
 })
 
 describe('isFinished(req)', function () {
-  it('should invoke listener given an unknwon object', function (done) {
-    onFinished({}, done)
-  })
-
   it('should return undefined for unknown object', function () {
     assert.strictEqual(onFinished.isFinished({}), undefined)
   })
