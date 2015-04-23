@@ -1,5 +1,5 @@
-unreleased
-==========
+2.2.1 / 2015-04-22
+==================
 
   * Fix `isFinished(req)` when data buffered
 
