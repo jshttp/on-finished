@@ -551,6 +551,24 @@ describe('isFinished(req)', function () {
     sendget(server)
   })
 
+  describe('when request data buffered', function () {
+    it('should be false before request finishes', function (done) {
+      var server = http.createServer(function (req, res) {
+        assert.ok(!onFinished.isFinished(req))
+
+        req.pause()
+        setTimeout(function () {
+          assert.ok(!onFinished.isFinished(req))
+          req.resume()
+          res.end()
+          done()
+        }, 10)
+      })
+
+      sendget(server)
+    })
+  })
+
   describe('when request errors', function () {
     it('should return true', function (done) {
       var server = http.createServer(function (req, res) {
