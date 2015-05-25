@@ -7,20 +7,23 @@
 
 /**
  * Module exports.
+ * @public
  */
 
-module.exports = onFinished;
-module.exports.isFinished = isFinished;
+module.exports = onFinished
+module.exports.isFinished = isFinished
 
 /**
-* Module dependencies.
-*/
+ * Module dependencies.
+ * @private
+ */
 
 var first = require('ee-first')
 
 /**
-* Variables.
-*/
+ * Variables.
+ * @private
+ */
 
 /* istanbul ignore next */
 var defer = typeof setImmediate === 'function'
@@ -34,7 +37,7 @@ var defer = typeof setImmediate === 'function'
  * @param {object} msg
  * @param {function} listener
  * @return {object}
- * @api public
+ * @public
  */
 
 function onFinished(msg, listener) {
@@ -54,7 +57,7 @@ function onFinished(msg, listener) {
  *
  * @param {object} msg
  * @return {boolean}
- * @api public
+ * @public
  */
 
 function isFinished(msg) {
@@ -129,7 +132,7 @@ function attachFinishedListener(msg, callback) {
  *
  * @param {object} msg
  * @return {function}
- * @api private
+ * @private
  */
 
 function attachListener(msg, listener) {
@@ -149,7 +152,7 @@ function attachListener(msg, listener) {
  *
  * @param {object} msg
  * @return {function}
- * @api private
+ * @private
  */
 
 function createListener(msg) {
