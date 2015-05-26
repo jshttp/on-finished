@@ -72,7 +72,7 @@ function isFinished(msg) {
 
   if (typeof msg.complete === 'boolean') {
     // IncomingMessage
-    return Boolean(!socket || !socket.readable || (msg.complete && !msg.readable))
+    return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
   }
 
   // don't know

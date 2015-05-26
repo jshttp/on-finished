@@ -1,6 +1,7 @@
 unreleased
 ==========
 
+  * Add defined behavior for HTTP `CONNECT` requests
   * deps: ee-first@1.1.1
 
 2.2.1 / 2015-04-22

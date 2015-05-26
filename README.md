@@ -6,7 +6,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Test Coverage][coveralls-image]][coveralls-url]
 
-Execute a callback when a request closes, finishes, or errors.
+Execute a callback when a HTTP request closes, finishes, or errors.
 
 ## Install
 
@@ -74,7 +74,32 @@ not even start certain operations if the response has already finished.
 Determine if `req` is already finished. This would be useful to check and
 not even start certain operations if the request has already finished.
 
-### Example
+## Special Node.js requests
+
+### HTTP CONNECT method
+
+The meaning of the `CONNECT` method from RFC 7231, section 4.3.6:
+
+> The CONNECT method requests that the recipient establish a tunnel to
+> the destination origin server identified by the request-target and,
+> if successful, thereafter restrict its behavior to blind forwarding
+> of packets, in both directions, until the tunnel is closed.  Tunnels
+> are commonly used to create an end-to-end virtual connection, through
+> one or more proxies, which can then be secured using TLS (Transport
+> Layer Security, [RFC5246]).
+
+In Node.js, these request objects come from the `'connect'` event on
+the HTTP server.
+
+When this module is used on a HTTP `CONNECT` request, the request is
+considered "finished" immediately, **due to limitations in the Node.js
+interface**. This means if the `CONNECT` request contains a request entity,
+the request will be considered "finished" even before it has been read.
+
+There is no such thing as a response object to a `CONNECT` request in
+Node.js, so there is no support for for one.
+
+## Example
 
 The following code ensures that file descriptors are always closed
 once the response finishes.
