@@ -610,6 +610,111 @@ describe('onFinished(req, listener)', function () {
       })
     })
   })
+
+  describe('when Upgrade request', function () {
+    it('should fire when request finishes', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
+      server.on('upgrade', function (req, socket, bodyHead) {
+        var data = [bodyHead]
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+
+          socket.on('data', function (chunk) {
+            assert.equal(chunk.toString(), 'ping')
+            socket.end('pong')
+          })
+          socket.write('HTTP/1.1 101 Switching Protocols\r\n')
+          socket.write('Connection: Upgrade\r\n')
+          socket.write('Upgrade: Raw\r\n')
+          socket.write('\r\n')
+        })
+
+        req.on('data', function (chunk) {
+          data.push(chunk)
+        })
+      })
+
+      server.listen(function () {
+        client = http.request({
+          headers: {
+            'Connection': 'Upgrade',
+            'Upgrade': 'Raw'
+          },
+          hostname: '127.0.0.1',
+          port: this.address().port
+        })
+
+        client.on('upgrade', function (res, socket, bodyHead) {
+          socket.write('ping')
+          socket.on('data', function (chunk) {
+            assert.equal(chunk.toString(), 'pong')
+            socket.end()
+            server.close(done)
+          })
+        })
+        client.end('knock, knock')
+      })
+    })
+
+    it('should fire when called after finish', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
+      server.on('upgrade', function (req, socket, bodyHead) {
+        var data = [bodyHead]
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+
+          socket.write('HTTP/1.1 101 Switching Protocols\r\n')
+          socket.write('Connection: Upgrade\r\n')
+          socket.write('Upgrade: Raw\r\n')
+          socket.write('\r\n')
+        })
+
+        socket.on('data', function (chunk) {
+          assert.equal(chunk.toString(), 'ping')
+          onFinished(req, function (err) {
+            socket.end('pong')
+          })
+        })
+
+        req.on('data', function (chunk) {
+          data.push(chunk)
+        })
+      })
+
+      server.listen(function () {
+        client = http.request({
+          headers: {
+            'Connection': 'Upgrade',
+            'Upgrade': 'Raw'
+          },
+          hostname: '127.0.0.1',
+          port: this.address().port
+        })
+
+        client.on('upgrade', function (res, socket, bodyHead) {
+          socket.write('ping')
+          socket.on('data', function (chunk) {
+            assert.equal(chunk.toString(), 'pong')
+            socket.end()
+            server.close(done)
+          })
+        })
+        client.end('knock, knock')
+      })
+    })
+  })
 })
 
 describe('isFinished(req)', function () {
@@ -776,6 +881,104 @@ describe('isFinished(req)', function () {
           port: this.address().port
         })
         client.on('connect', function (res, socket, bodyHead) {
+          socket.write('ping')
+          socket.on('data', function (chunk) {
+            assert.equal(chunk.toString(), 'pong')
+            socket.end()
+            server.close(done)
+          })
+        })
+        client.end('knock, knock')
+      })
+    })
+  })
+
+  describe('when Upgrade request', function () {
+    it('should be true immediately', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
+
+      server.on('upgrade', function (req, socket, bodyHead) {
+        assert.ok(onFinished.isFinished(req))
+        assert.equal(bodyHead.length, 0)
+        req.resume()
+
+        socket.on('data', function (chunk) {
+          assert.equal(chunk.toString(), 'ping')
+          socket.end('pong')
+        })
+        socket.write('HTTP/1.1 101 Switching Protocols\r\n')
+        socket.write('Connection: Upgrade\r\n')
+        socket.write('Upgrade: Raw\r\n')
+        socket.write('\r\n')
+      })
+
+      server.listen(function () {
+        client = http.request({
+          headers: {
+            'Connection': 'Upgrade',
+            'Upgrade': 'Raw'
+          },
+          hostname: '127.0.0.1',
+          port: this.address().port
+        })
+
+        client.on('upgrade', function (res, socket, bodyHead) {
+          socket.write('ping')
+          socket.on('data', function (chunk) {
+            assert.equal(chunk.toString(), 'pong')
+            socket.end()
+            server.close(done)
+          })
+        })
+        client.end()
+      })
+    })
+
+    it('should be true after request finishes', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
+      server.on('upgrade', function (req, socket, bodyHead) {
+        var data = [bodyHead]
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.ok(onFinished.isFinished(req))
+          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+
+          socket.write('HTTP/1.1 101 Switching Protocols\r\n')
+          socket.write('Connection: Upgrade\r\n')
+          socket.write('Upgrade: Raw\r\n')
+          socket.write('\r\n')
+        })
+
+        socket.on('data', function (chunk) {
+          assert.equal(chunk.toString(), 'ping')
+          socket.end('pong')
+        })
+
+        req.on('data', function (chunk) {
+          data.push(chunk)
+        })
+      })
+
+      server.listen(function () {
+        client = http.request({
+          headers: {
+            'Connection': 'Upgrade',
+            'Upgrade': 'Raw'
+          },
+          hostname: '127.0.0.1',
+          port: this.address().port
+        })
+
+        client.on('upgrade', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
             assert.equal(chunk.toString(), 'pong')

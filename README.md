@@ -99,6 +99,26 @@ the request will be considered "finished" even before it has been read.
 There is no such thing as a response object to a `CONNECT` request in
 Node.js, so there is no support for for one.
 
+### HTTP Upgrade request
+
+The meaning of the `Upgrade` header from RFC 7230, section 6.1:
+
+> The "Upgrade" header field is intended to provide a simple mechanism
+> for transitioning from HTTP/1.1 to some other protocol on the same
+> connection.
+
+In Node.js, these request objects come from the `'upgrade'` event on
+the HTTP server.
+
+When this module is used on a HTTP request with an `Upgrade` header, the
+request is considered "finished" immediately, **due to limitations in the
+Node.js interface**. This means if the `Upgrade` request contains a request
+entity, the request will be considered "finished" even before it has been
+read.
+
+There is no such thing as a response object to a `Upgrade` request in
+Node.js, so there is no support for for one.
+
 ## Example
 
 The following code ensures that file descriptors are always closed
