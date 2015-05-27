@@ -1,5 +1,5 @@
-unreleased
-==========
+2.3.0 / 2015-05-26
+==================
 
   * Add defined behavior for HTTP `CONNECT` requests
   * Add defined behavior for HTTP `Upgrade` requests
