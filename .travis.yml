@@ -9,6 +9,8 @@ node_js:
   - "2.5"
   - "3.0"
   - "3.3"
+  - "4.0"
+  - "4.1"
 sudo: false
 script: "npm run-script test-travis"
 after_script: "npm install coveralls@2 && cat ./coverage/lcov.info | coveralls"
