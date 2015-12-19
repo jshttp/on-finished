@@ -12,7 +12,7 @@
     "ee-first": "1.1.1"
   },
   "devDependencies": {
-    "istanbul": "0.3.21",
+    "istanbul": "0.4.1",
     "mocha": "2.3.4"
   },
   "engines": {
