@@ -145,7 +145,7 @@ http.createServer(function onRequest(req, res) {
 [npm-image]: https://img.shields.io/npm/v/on-finished.svg
 [npm-url]: https://npmjs.org/package/on-finished
 [node-version-image]: https://img.shields.io/node/v/on-finished.svg
-[node-version-url]: http://nodejs.org/download/
+[node-version-url]: https://nodejs.org/en/download/
 [travis-image]: https://img.shields.io/travis/jshttp/on-finished/master.svg
 [travis-url]: https://travis-ci.org/jshttp/on-finished
 [coveralls-image]: https://img.shields.io/coveralls/jshttp/on-finished/master.svg
