@@ -124,7 +124,7 @@ function attachFinishedListener(msg, callback) {
   msg.on('socket', onSocket)
 
   if (msg.socket === undefined) {
-    // node.js 0.8 patch
+    // istanbul ignore next: node.js 0.8 patch
     patchAssignSocket(msg, onSocket)
   }
 }
@@ -183,6 +183,7 @@ function createListener(msg) {
  * @private
  */
 
+// istanbul ignore next: node.js 0.8 patch
 function patchAssignSocket(res, callback) {
   var assignSocket = res.assignSocket
 
