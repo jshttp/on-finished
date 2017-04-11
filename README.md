@@ -55,7 +55,7 @@ Listener is invoked as `listener(err, req)`.
 var data = ''
 
 req.setEncoding('utf8')
-res.on('data', function (str) {
+req.on('data', function (str) {
   data += str
 })
 
