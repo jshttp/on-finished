@@ -16,6 +16,8 @@ $ npm install on-finished
 
 ## API
 
+<!-- eslint-disable no-unused-vars -->
+
 ```js
 var onFinished = require('on-finished')
 ```
@@ -31,6 +33,8 @@ Listening to the end of a response would be used to close things associated
 with the response, like open files.
 
 Listener is invoked as `listener(err, res)`.
+
+<!-- eslint-disable handle-callback-err, no-undef -->
 
 ```js
 onFinished(res, function (err, res) {
@@ -50,6 +54,8 @@ Listening to the end of a request would be used to know when to continue
 after reading the data.
 
 Listener is invoked as `listener(err, req)`.
+
+<!-- eslint-disable handle-callback-err, no-undef, no-unused-vars -->
 
 ```js
 var data = ''
@@ -126,13 +132,14 @@ once the response finishes.
 
 ```js
 var destroy = require('destroy')
+var fs = require('fs')
 var http = require('http')
 var onFinished = require('on-finished')
 
-http.createServer(function onRequest(req, res) {
+http.createServer(function onRequest (req, res) {
   var stream = fs.createReadStream('package.json')
   stream.pipe(res)
-  onFinished(res, function (err) {
+  onFinished(res, function () {
     destroy(stream)
   })
 })

@@ -12,6 +12,13 @@
     "ee-first": "1.1.1"
   },
   "devDependencies": {
+    "eslint": "3.19.0",
+    "eslint-config-standard": "10.2.0",
+    "eslint-plugin-import": "2.2.0",
+    "eslint-plugin-markdown": "1.0.0-beta.4",
+    "eslint-plugin-node": "4.2.2",
+    "eslint-plugin-promise": "3.5.0",
+    "eslint-plugin-standard": "3.0.1",
     "istanbul": "0.4.5",
     "mocha": "2.5.3"
   },
@@ -24,6 +31,7 @@
     "index.js"
   ],
   "scripts": {
+    "lint": "eslint --plugin markdown --ext js,md .",
     "test": "mocha --reporter spec --bail --check-leaks test/",
     "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
     "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/"

@@ -16,7 +16,7 @@ describe('onFinished(res, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
 
     it('should include the response object', function (done) {
@@ -29,7 +29,7 @@ describe('onFinished(res, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
 
     it('should fire when called after finish', function (done) {
@@ -40,7 +40,7 @@ describe('onFinished(res, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
   })
 
@@ -58,7 +58,7 @@ describe('onFinished(res, listener)', function () {
 
           called = req
 
-          writerequest(socket)
+          writeRequest(socket)
         })
 
         res.end()
@@ -67,7 +67,7 @@ describe('onFinished(res, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this)
+          writeRequest(this)
         })
       })
     })
@@ -106,7 +106,7 @@ describe('onFinished(res, listener)', function () {
 
         if (responses.length === 1) {
           // second request
-          writerequest(socket)
+          writeRequest(socket)
         }
 
         req.resume()
@@ -116,7 +116,7 @@ describe('onFinished(res, listener)', function () {
       server.listen(function () {
         var data = ''
         socket = net.connect(this.address().port, function () {
-          writerequest(this)
+          writeRequest(this)
         })
 
         socket.on('data', function (chunk) {
@@ -146,7 +146,7 @@ describe('onFinished(res, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -166,7 +166,7 @@ describe('onFinished(res, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -224,7 +224,7 @@ describe('isFinished(res)', function () {
       done()
     })
 
-    sendget(server)
+    sendGet(server)
   })
 
   it('should be true after response finishes', function (done) {
@@ -238,7 +238,7 @@ describe('isFinished(res)', function () {
       res.end()
     })
 
-    sendget(server)
+    sendGet(server)
   })
 
   describe('when requests pipelined', function () {
@@ -266,7 +266,7 @@ describe('isFinished(res)', function () {
 
         if (responses.length === 1) {
           // second request
-          writerequest(socket)
+          writeRequest(socket)
         }
 
         req.resume()
@@ -275,7 +275,7 @@ describe('isFinished(res)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this)
+          writeRequest(this)
         })
       })
     })
@@ -304,14 +304,14 @@ describe('isFinished(res)', function () {
 
         if (requests === 1) {
           // second request
-          writerequest(socket, true)
+          writeRequest(socket, true)
         }
       })
       var socket
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this)
+          writeRequest(this)
         })
       })
     })
@@ -333,7 +333,7 @@ describe('isFinished(res)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -368,7 +368,7 @@ describe('onFinished(req, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
 
     it('should include the request object', function (done) {
@@ -382,7 +382,7 @@ describe('onFinished(req, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
 
     it('should fire when called after finish', function (done) {
@@ -394,7 +394,7 @@ describe('onFinished(req, listener)', function () {
         setTimeout(res.end.bind(res), 0)
       })
 
-      sendget(server)
+      sendGet(server)
     })
   })
 
@@ -418,7 +418,7 @@ describe('onFinished(req, listener)', function () {
           called = req
 
           res.end()
-          writerequest(socket, true)
+          writeRequest(socket, true)
         })
 
         req.setEncoding('utf8')
@@ -433,7 +433,7 @@ describe('onFinished(req, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -454,7 +454,7 @@ describe('onFinished(req, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -474,7 +474,7 @@ describe('onFinished(req, listener)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -581,7 +581,7 @@ describe('onFinished(req, listener)', function () {
 
         socket.on('data', function (chunk) {
           assert.equal(chunk.toString(), 'ping')
-          onFinished(req, function (err) {
+          onFinished(req, function () {
             socket.end('pong')
           })
         })
@@ -683,7 +683,7 @@ describe('onFinished(req, listener)', function () {
 
         socket.on('data', function (chunk) {
           assert.equal(chunk.toString(), 'ping')
-          onFinished(req, function (err) {
+          onFinished(req, function () {
             socket.end('pong')
           })
         })
@@ -730,7 +730,7 @@ describe('isFinished(req)', function () {
       done()
     })
 
-    sendget(server)
+    sendGet(server)
   })
 
   it('should be true after request finishes', function (done) {
@@ -745,7 +745,7 @@ describe('isFinished(req)', function () {
       res.end()
     })
 
-    sendget(server)
+    sendGet(server)
   })
 
   describe('when request data buffered', function () {
@@ -762,7 +762,7 @@ describe('isFinished(req)', function () {
         }, 10)
       })
 
-      sendget(server)
+      sendGet(server)
     })
   })
 
@@ -782,7 +782,7 @@ describe('isFinished(req)', function () {
 
       server.listen(function () {
         socket = net.connect(this.address().port, function () {
-          writerequest(this, true)
+          writeRequest(this, true)
         })
       })
     })
@@ -992,12 +992,12 @@ describe('isFinished(req)', function () {
   })
 })
 
-function captureStderr(fn) {
+function captureStderr (fn) {
   var chunks = []
   var write = process.stderr.write
 
-  process.stderr.write = function write(chunk, encoding) {
-    chunks.push(new Buffer(chunk, encoding))
+  process.stderr.write = function write (chunk, encoding) {
+    chunks.push(new Buffer(chunk, encoding)) // eslint-disable-line node/no-deprecated-api
   }
 
   try {
@@ -1009,19 +1009,19 @@ function captureStderr(fn) {
   return Buffer.concat(chunks).toString('utf8')
 }
 
-function noop() {}
+function noop () {}
 
-function sendget(server) {
-  server.listen(function onListening() {
+function sendGet (server) {
+  server.listen(function onListening () {
     var port = this.address().port
-    http.get('http://127.0.0.1:' + port, function onResponse(res) {
+    http.get('http://127.0.0.1:' + port, function onResponse (res) {
       res.resume()
       res.on('close', server.close.bind(server))
     })
   })
 }
 
-function writerequest(socket, chunked) {
+function writeRequest (socket, chunked) {
   socket.write('GET / HTTP/1.1\r\n')
   socket.write('Host: localhost\r\n')
   socket.write('Connection: keep-alive\r\n')
