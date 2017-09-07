@@ -39,7 +39,7 @@ Listener is invoked as `listener(err, res)`.
 ```js
 onFinished(res, function (err, res) {
   // clean up open fds, etc.
-  // err contains the error is request error'd
+  // err contains the error if request error'd
 })
 ```
 
