@@ -4,7 +4,8 @@
   "version": "2.3.0",
   "contributors": [
     "Douglas Christopher Wilson <doug@somethingdoug.com>",
-    "Jonathan Ong <me@jongleberry.com> (http://jongleberry.com)"
+    "Jonathan Ong <me@jongleberry.com> (http://jongleberry.com)",
+    "Geoffrey Goodman <geoff@plnkr.co>"
   ],
   "license": "MIT",
   "repository": "jshttp/on-finished",
