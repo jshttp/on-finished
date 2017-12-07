@@ -209,6 +209,122 @@ describe('onFinished(res, listener)', function () {
         })
       })
     })
+
+    describe('in FIFO mode', function () {
+      it('should run in the correct order', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          for (var i = 0; i < runs; i++) {
+            onFinished(res, checkResults.bind(null, i))
+          }
+
+          onFinished(res, done)
+          res.end()
+        })
+
+        server.listen(function () {
+          var port = this.address().port
+          http.get('http://127.0.0.1:' + port, function (res) {
+            res.resume()
+            res.on('close', server.close.bind(server))
+          })
+        })
+      })
+
+      it('should run in the correct order after finish', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          onFinished(res, function () {
+            for (var i = 0; i < runs; i++) {
+              onFinished(res, checkResults.bind(null, i))
+            }
+
+            onFinished(res, done)
+          })
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
+      })
+    })
+
+    describe('in LIFO mode', function () {
+      it('should run in the correct order', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, runs - 1 - result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], runs - 1 - i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          for (var i = 0; i < runs; i++) {
+            onFinished(res, checkResults.bind(null, i), true)
+          }
+
+          onFinished(res, done)
+          res.end()
+        })
+
+        server.listen(function () {
+          var port = this.address().port
+          http.get('http://127.0.0.1:' + port, function (res) {
+            res.resume()
+            res.on('close', server.close.bind(server))
+          })
+        })
+      })
+
+      it('should run in the correct order after finish', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, runs - 1 - result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], runs - 1 - i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          onFinished(res, function () {
+            for (var i = 0; i < runs; i++) {
+              onFinished(res, checkResults.bind(null, i), true)
+            }
+
+            onFinished(res, done)
+          })
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
+      })
+    })
   })
 })
 
@@ -515,6 +631,122 @@ describe('onFinished(req, listener)', function () {
           res.resume()
           res.on('close', server.close.bind(server))
         })
+      })
+    })
+
+    describe('in FIFO mode', function () {
+      it('should run in the correct order', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          for (var i = 0; i < runs; i++) {
+            onFinished(req, checkResults.bind(null, i))
+          }
+
+          onFinished(req, done)
+          res.end()
+        })
+
+        server.listen(function () {
+          var port = this.address().port
+          http.get('http://127.0.0.1:' + port, function (res) {
+            res.resume()
+            res.on('close', server.close.bind(server))
+          })
+        })
+      })
+
+      it('should run in the correct order after finish', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          onFinished(res, function () {
+            for (var i = 0; i < runs; i++) {
+              onFinished(req, checkResults.bind(null, i))
+            }
+
+            onFinished(req, done)
+          })
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
+      })
+    })
+
+    describe('in LIFO mode', function () {
+      it('should run in the correct order', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, runs - 1 - result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], runs - 1 - i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          for (var i = 0; i < runs; i++) {
+            onFinished(req, checkResults.bind(null, i), true)
+          }
+
+          onFinished(req, done)
+          res.end()
+        })
+
+        server.listen(function () {
+          var port = this.address().port
+          http.get('http://127.0.0.1:' + port, function (res) {
+            res.resume()
+            res.on('close', server.close.bind(server))
+          })
+        })
+      })
+
+      it('should run in the correct order after finish', function (done) {
+        var results = []
+        var runs = 10
+        var checkResults = function (result) {
+          assert.equal(results.length, runs - 1 - result)
+
+          for (var i = 0; i < results.length; i++) {
+            assert.equal(results[i], runs - 1 - i)
+          }
+
+          results.push(result)
+        }
+        var server = http.createServer(function (req, res) {
+          onFinished(res, function () {
+            for (var i = 0; i < runs; i++) {
+              onFinished(req, checkResults.bind(null, i), true)
+            }
+
+            onFinished(req, done)
+          })
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
       })
     })
   })

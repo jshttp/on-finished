@@ -38,18 +38,32 @@ var defer = typeof setImmediate === 'function'
  *
  * @param {object} msg
  * @param {function} listener
+ * @param {boolean} lifo
  * @return {object}
  * @public
  */
 
-function onFinished (msg, listener) {
+function onFinished (msg, listener, lifo) {
   if (isFinished(msg) !== false) {
-    defer(listener, null, msg)
+    var attached = msg.__onFinished
+
+    // create a private single listener with queue
+    if (!attached || !attached.queue) {
+      attached = msg.__onFinished = createListener(msg)
+    }
+
+    if (lifo === true) {
+      attached.queue.unshift(listener)
+    } else {
+      attached.queue.push(listener)
+    }
+
+    defer(attached, null, msg)
     return msg
   }
 
   // attach the listener to the message
-  attachListener(msg, listener)
+  attachListener(msg, listener, lifo)
 
   return msg
 }
@@ -133,11 +147,13 @@ function attachFinishedListener (msg, callback) {
  * Attach the listener to the message.
  *
  * @param {object} msg
+ * @param {function} listener
+ * @param {boolean} lifo
  * @return {function}
  * @private
  */
 
-function attachListener (msg, listener) {
+function attachListener (msg, listener, lifo) {
   var attached = msg.__onFinished
 
   // create a private single listener with queue
@@ -146,7 +162,11 @@ function attachListener (msg, listener) {
     attachFinishedListener(msg, attached)
   }
 
-  attached.queue.push(listener)
+  if (lifo === true) {
+    attached.queue.unshift(listener)
+  } else {
+    attached.queue.push(listener)
+  }
 }
 
 /**

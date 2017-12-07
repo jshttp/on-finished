@@ -47,6 +47,20 @@ onFinished(res, function (err, res) {
 })
 ```
 
+### onFinished(res, listener, true)
+
+Identical to the above except that instead of listeners being invoked in
+the order that they were added (FIFO), these will be invoked in reverse (LIFO) order.
+
+<!-- eslint-disable handle-callback-err, no-undef -->
+
+```js
+onFinished(res, function (err, res) {
+  // clean up open fds, etc.
+  // err contains the error if request error'd
+}, true)
+```
+
 ### onFinished(req, listener)
 
 Attach a listener to listen for the request to finish. The listener will
@@ -72,6 +86,26 @@ req.on('data', function (str) {
 onFinished(req, function (err, req) {
   // data is read unless there is err
 })
+```
+
+### onFinished(req, listener, true)
+
+Identical to the above except that instead of listeners being invoked in
+the order that they were added (FIFO), these will be invoked in reverse (LIFO) order.
+
+<!-- eslint-disable handle-callback-err, no-undef, no-unused-vars -->
+
+```js
+var data = ''
+
+req.setEncoding('utf8')
+req.on('data', function (str) {
+  data += str
+})
+
+onFinished(req, function (err, req) {
+  // data is read unless there is err
+}, true)
 ```
 
 ### onFinished.isFinished(res)
