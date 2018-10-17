@@ -23,7 +23,7 @@ describe('onFinished(res, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err, msg) {
           assert.ok(!err)
-          assert.equal(msg, res)
+          assert.strictEqual(msg, res)
           done()
         })
         setTimeout(res.end.bind(res), 0)
@@ -82,7 +82,7 @@ describe('onFinished(res, listener)', function () {
 
         onFinished(res, function (err) {
           assert.ifError(err)
-          assert.equal(responses[0], res)
+          assert.strictEqual(responses[0], res)
           responses.shift()
 
           if (responses.length === 0) {
@@ -100,7 +100,7 @@ describe('onFinished(res, listener)', function () {
             return
           }
 
-          assert.equal(responses.length, 2)
+          assert.strictEqual(responses.length, 2)
           responses[0].end('response a')
         })
 
@@ -155,7 +155,7 @@ describe('onFinished(res, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err, msg) {
           assert.ok(err)
-          assert.equal(msg, res)
+          assert.strictEqual(msg, res)
           done()
         })
 
@@ -197,7 +197,7 @@ describe('onFinished(res, listener)', function () {
         })
 
         onFinished(res, done)
-        assert.equal(stderr, '')
+        assert.strictEqual(stderr, '')
         res.end()
       })
 
@@ -375,7 +375,7 @@ describe('onFinished(req, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err, msg) {
           assert.ok(!err)
-          assert.equal(msg, req)
+          assert.strictEqual(msg, req)
           done()
         })
         req.resume()
@@ -406,7 +406,7 @@ describe('onFinished(req, listener)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.equal(data, 'A')
+          assert.strictEqual(data, 'A')
 
           if (called) {
             socket.end()
@@ -463,7 +463,7 @@ describe('onFinished(req, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err, msg) {
           assert.ok(err)
-          assert.equal(msg, req)
+          assert.strictEqual(msg, req)
           done()
         })
 
@@ -505,7 +505,7 @@ describe('onFinished(req, listener)', function () {
         })
 
         onFinished(req, done)
-        assert.equal(stderr, '')
+        assert.strictEqual(stderr, '')
         res.end()
       })
 
@@ -531,10 +531,10 @@ describe('onFinished(req, listener)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
 
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'ping')
+            assert.strictEqual(chunk.toString(), 'ping')
             socket.end('pong')
           })
           socket.write('HTTP/1.1 200 OK\r\n\r\n')
@@ -555,7 +555,7 @@ describe('onFinished(req, listener)', function () {
         client.on('connect', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -575,12 +575,12 @@ describe('onFinished(req, listener)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
           socket.write('HTTP/1.1 200 OK\r\n\r\n')
         })
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           onFinished(req, function () {
             socket.end('pong')
           })
@@ -601,7 +601,7 @@ describe('onFinished(req, listener)', function () {
         client.on('connect', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -623,10 +623,10 @@ describe('onFinished(req, listener)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
 
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'ping')
+            assert.strictEqual(chunk.toString(), 'ping')
             socket.end('pong')
           })
           socket.write('HTTP/1.1 101 Switching Protocols\r\n')
@@ -653,7 +653,7 @@ describe('onFinished(req, listener)', function () {
         client.on('upgrade', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -673,7 +673,7 @@ describe('onFinished(req, listener)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
 
           socket.write('HTTP/1.1 101 Switching Protocols\r\n')
           socket.write('Connection: Upgrade\r\n')
@@ -682,7 +682,7 @@ describe('onFinished(req, listener)', function () {
         })
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           onFinished(req, function () {
             socket.end('pong')
           })
@@ -706,7 +706,7 @@ describe('onFinished(req, listener)', function () {
         client.on('upgrade', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -817,11 +817,11 @@ describe('isFinished(req)', function () {
 
       server.on('connect', function (req, socket, bodyHead) {
         assert.ok(onFinished.isFinished(req))
-        assert.equal(bodyHead.length, 0)
+        assert.strictEqual(bodyHead.length, 0)
         req.resume()
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           socket.end('pong')
         })
         socket.write('HTTP/1.1 200 OK\r\n\r\n')
@@ -838,7 +838,7 @@ describe('isFinished(req)', function () {
         client.on('connect', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -859,12 +859,12 @@ describe('isFinished(req)', function () {
         onFinished(req, function (err) {
           assert.ifError(err)
           assert.ok(onFinished.isFinished(req))
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
           socket.write('HTTP/1.1 200 OK\r\n\r\n')
         })
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           socket.end('pong')
         })
 
@@ -883,7 +883,7 @@ describe('isFinished(req)', function () {
         client.on('connect', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -903,11 +903,11 @@ describe('isFinished(req)', function () {
 
       server.on('upgrade', function (req, socket, bodyHead) {
         assert.ok(onFinished.isFinished(req))
-        assert.equal(bodyHead.length, 0)
+        assert.strictEqual(bodyHead.length, 0)
         req.resume()
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           socket.end('pong')
         })
         socket.write('HTTP/1.1 101 Switching Protocols\r\n')
@@ -929,7 +929,7 @@ describe('isFinished(req)', function () {
         client.on('upgrade', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
@@ -950,7 +950,7 @@ describe('isFinished(req)', function () {
         onFinished(req, function (err) {
           assert.ifError(err)
           assert.ok(onFinished.isFinished(req))
-          assert.equal(Buffer.concat(data).toString(), 'knock, knock')
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
 
           socket.write('HTTP/1.1 101 Switching Protocols\r\n')
           socket.write('Connection: Upgrade\r\n')
@@ -959,7 +959,7 @@ describe('isFinished(req)', function () {
         })
 
         socket.on('data', function (chunk) {
-          assert.equal(chunk.toString(), 'ping')
+          assert.strictEqual(chunk.toString(), 'ping')
           socket.end('pong')
         })
 
@@ -981,7 +981,7 @@ describe('isFinished(req)', function () {
         client.on('upgrade', function (res, socket, bodyHead) {
           socket.write('ping')
           socket.on('data', function (chunk) {
-            assert.equal(chunk.toString(), 'pong')
+            assert.strictEqual(chunk.toString(), 'pong')
             socket.end()
             server.close(done)
           })
