@@ -1,10 +1,10 @@
 # on-finished
 
-[![NPM Version][npm-image]][npm-url]
-[![NPM Downloads][downloads-image]][downloads-url]
-[![Node.js Version][node-version-image]][node-version-url]
+[![NPM Version][npm-version-image]][npm-url]
+[![NPM Downloads][npm-downloads-image]][npm-url]
+[![Node.js Version][node-image]][node-url]
 [![Build Status][travis-image]][travis-url]
-[![Test Coverage][coveralls-image]][coveralls-url]
+[![Coverage Status][coveralls-image]][coveralls-url]
 
 Execute a callback when a HTTP request closes, finishes, or errors.
 
@@ -153,13 +153,12 @@ http.createServer(function onRequest (req, res) {
 
 [MIT](LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/on-finished.svg
-[npm-url]: https://npmjs.org/package/on-finished
-[node-version-image]: https://img.shields.io/node/v/on-finished.svg
-[node-version-url]: https://nodejs.org/en/download/
-[travis-image]: https://img.shields.io/travis/jshttp/on-finished/master.svg
-[travis-url]: https://travis-ci.org/jshttp/on-finished
-[coveralls-image]: https://img.shields.io/coveralls/jshttp/on-finished/master.svg
+[coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/on-finished/master
 [coveralls-url]: https://coveralls.io/r/jshttp/on-finished?branch=master
-[downloads-image]: https://img.shields.io/npm/dm/on-finished.svg
-[downloads-url]: https://npmjs.org/package/on-finished
+[node-image]: https://badgen.net/npm/node/on-finished
+[node-url]: https://nodejs.org/en/download
+[npm-downloads-image]: https://badgen.net/npm/dm/on-finished
+[npm-url]: https://npmjs.org/package/on-finished
+[npm-version-image]: https://badgen.net/npm/v/on-finished
+[travis-image]: https://badgen.net/travis/jshttp/on-finished/master
+[travis-url]: https://travis-ci.org/jshttp/on-finished
