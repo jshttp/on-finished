@@ -459,7 +459,7 @@ describe('onFinished(req, listener)', function () {
       })
     })
 
-    it('should include the request objecy', function (done) {
+    it('should include the request object', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err, msg) {
           assert.ok(err)
