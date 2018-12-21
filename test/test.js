@@ -136,7 +136,7 @@ describe('onFinished(res, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
           assert.ok(err)
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -156,7 +156,7 @@ describe('onFinished(res, listener)', function () {
         onFinished(res, function (err, msg) {
           assert.ok(err)
           assert.strictEqual(msg, res)
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -176,7 +176,7 @@ describe('onFinished(res, listener)', function () {
     it('should execute the callback', function (done) {
       var client
       var server = http.createServer(function (req, res) {
-        onFinished(res, done)
+        onFinished(res, close(server, done))
         setTimeout(client.abort.bind(client), 0)
       })
       server.listen(function () {
@@ -205,7 +205,7 @@ describe('onFinished(res, listener)', function () {
         var port = this.address().port
         http.get('http://127.0.0.1:' + port, function (res) {
           res.resume()
-          res.on('close', server.close.bind(server))
+          res.on('end', server.close.bind(server))
         })
       })
     })
@@ -323,7 +323,7 @@ describe('isFinished(res)', function () {
         onFinished(res, function (err) {
           assert.ok(err)
           assert.ok(onFinished.isFinished(res))
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -346,7 +346,7 @@ describe('isFinished(res)', function () {
         onFinished(res, function (err) {
           assert.ifError(err)
           assert.ok(onFinished.isFinished(res))
-          done()
+          server.close(done)
         })
         setTimeout(client.abort.bind(client), 0)
       })
@@ -444,7 +444,7 @@ describe('onFinished(req, listener)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err) {
           assert.ok(err)
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -464,7 +464,7 @@ describe('onFinished(req, listener)', function () {
         onFinished(req, function (err, msg) {
           assert.ok(err)
           assert.strictEqual(msg, req)
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -484,7 +484,7 @@ describe('onFinished(req, listener)', function () {
     it('should execute the callback', function (done) {
       var client
       var server = http.createServer(function (req, res) {
-        onFinished(req, done)
+        onFinished(req, close(server, done))
         setTimeout(client.abort.bind(client), 0)
       })
       server.listen(function () {
@@ -513,7 +513,7 @@ describe('onFinished(req, listener)', function () {
         var port = this.address().port
         http.get('http://127.0.0.1:' + port, function (res) {
           res.resume()
-          res.on('close', server.close.bind(server))
+          res.on('end', server.close.bind(server))
         })
       })
     })
@@ -772,7 +772,7 @@ describe('isFinished(req)', function () {
         onFinished(req, function (err) {
           assert.ok(err)
           assert.ok(onFinished.isFinished(req))
-          done()
+          server.close(done)
         })
 
         socket.on('error', noop)
@@ -795,7 +795,7 @@ describe('isFinished(req)', function () {
         onFinished(res, function (err) {
           assert.ifError(err)
           assert.ok(onFinished.isFinished(req))
-          done()
+          server.close(done)
         })
         setTimeout(client.abort.bind(client), 0)
       })
@@ -1009,6 +1009,14 @@ function captureStderr (fn) {
   return Buffer.concat(chunks).toString('utf8')
 }
 
+function close (server, callback) {
+  return function (error) {
+    server.close(function (err) {
+      callback(error || err)
+    })
+  }
+}
+
 function noop () {}
 
 function sendGet (server) {
@@ -1016,7 +1024,7 @@ function sendGet (server) {
     var port = this.address().port
     http.get('http://127.0.0.1:' + port, function onResponse (res) {
       res.resume()
-      res.on('close', server.close.bind(server))
+      res.on('end', server.close.bind(server))
     })
   })
 }
