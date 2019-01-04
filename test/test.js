@@ -480,6 +480,43 @@ describe('onFinished(req, listener)', function () {
     })
   })
 
+  describe('when requests pipelined', function () {
+    it('should handle socket errors', function (done) {
+      var count = 0
+      var server = http.createServer(function (req) {
+        var num = ++count
+
+        onFinished(req, function (err) {
+          assert.ok(err)
+          if (!--wait) server.close(done)
+        })
+
+        if (num === 1) {
+          // second request
+          writeRequest(socket, true)
+          req.pause()
+        } else {
+          // cause framing error in second request
+          socket.write('W')
+          req.resume()
+        }
+      })
+      var socket
+      var wait = 3
+
+      server.listen(function () {
+        socket = net.connect(this.address().port, function () {
+          writeRequest(this)
+        })
+
+        socket.on('close', function () {
+          assert.strictEqual(count, 2)
+          if (!--wait) server.close(done)
+        })
+      })
+    })
+  })
+
   describe('when the request aborts', function () {
     it('should execute the callback', function (done) {
       var client
