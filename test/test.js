@@ -513,6 +513,8 @@ describe('onFinished(req, listener)', function () {
           assert.strictEqual(count, 2)
           if (!--wait) server.close(done)
         })
+
+        socket.resume()
       })
     })
   })
