@@ -64,10 +64,21 @@ function onFinished (msg, listener) {
 
 function isFinished (msg) {
   var socket = msg.socket
+  var stream = msg.stream
+
+  if (stream && typeof stream.closed === 'boolean') {
+    // Http2ServerRequest
+    // Http2ServerResponse
+    return stream.closed
+  }
 
   if (typeof msg.finished === 'boolean') {
     // OutgoingMessage
-    return Boolean(msg.finished || (socket && !socket.writable))
+    return (
+      msg.finished &&
+      msg.outputSize === 0 &&
+      (!socket || socket.writableLength === 0)
+    ) || (socket && !socket.writable)
   }
 
   if (typeof msg.complete === 'boolean') {
