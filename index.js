@@ -101,7 +101,7 @@ function attachFinishedListener (msg, callback) {
   }
 
   // finished on first message event
-  eeMsg = eeSocket = first([[msg, 'end', 'finish']], onFinish)
+  eeMsg = eeSocket = first([[msg, 'end', 'finish', 'error', 'close']], onFinish)
 
   function onSocket (socket) {
     // remove listener
