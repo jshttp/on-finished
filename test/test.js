@@ -682,8 +682,8 @@ describe('onFinished(req, listener)', function () {
       server.listen(function () {
         client = http.request({
           headers: {
-            'Connection': 'Upgrade',
-            'Upgrade': 'Raw'
+            Connection: 'Upgrade',
+            Upgrade: 'Raw'
           },
           hostname: '127.0.0.1',
           port: this.address().port
@@ -735,8 +735,8 @@ describe('onFinished(req, listener)', function () {
       server.listen(function () {
         client = http.request({
           headers: {
-            'Connection': 'Upgrade',
-            'Upgrade': 'Raw'
+            Connection: 'Upgrade',
+            Upgrade: 'Raw'
           },
           hostname: '127.0.0.1',
           port: this.address().port
@@ -958,8 +958,8 @@ describe('isFinished(req)', function () {
       server.listen(function () {
         client = http.request({
           headers: {
-            'Connection': 'Upgrade',
-            'Upgrade': 'Raw'
+            Connection: 'Upgrade',
+            Upgrade: 'Raw'
           },
           hostname: '127.0.0.1',
           port: this.address().port
@@ -1010,8 +1010,8 @@ describe('isFinished(req)', function () {
       server.listen(function () {
         client = http.request({
           headers: {
-            'Connection': 'Upgrade',
-            'Upgrade': 'Raw'
+            Connection: 'Upgrade',
+            Upgrade: 'Raw'
           },
           hostname: '127.0.0.1',
           port: this.address().port
