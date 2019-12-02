@@ -12,7 +12,7 @@
     "ee-first": "1.1.1"
   },
   "devDependencies": {
-    "eslint": "6.5.1",
+    "eslint": "6.7.2",
     "eslint-config-standard": "14.1.0",
     "eslint-plugin-import": "2.18.2",
     "eslint-plugin-markdown": "1.0.1",
