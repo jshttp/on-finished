@@ -20,6 +20,7 @@ module.exports.isFinished = isFinished
  * @private
  */
 
+var asyncHooks = tryRequireAsyncHooks()
 var first = require('ee-first')
 
 /**
@@ -49,7 +50,7 @@ function onFinished (msg, listener) {
   }
 
   // attach the listener to the message
-  attachListener(msg, listener)
+  attachListener(msg, wrap(listener))
 
   return msg
 }
@@ -194,4 +195,34 @@ function patchAssignSocket (res, callback) {
     assignSocket.call(this, socket)
     callback(socket)
   }
+}
+
+/**
+ * Try to require async_hooks
+ * @private
+ */
+
+function tryRequireAsyncHooks () {
+  try {
+    return require('async_hooks')
+  } catch (e) {
+    /* istanbul ignore next */
+    return {}
+  }
+}
+
+/**
+ * Wrap function with async resource
+ * @private
+ */
+
+function wrap (fn) {
+  if (!asyncHooks.AsyncResource) {
+    /* istanbul ignore next */
+    return fn
+  }
+
+  // AsyncResource.bind static method backported
+  var res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
+  return res.runInAsyncScope.bind(res, fn, null)
 }

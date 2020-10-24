@@ -1,8 +1,13 @@
 
 var assert = require('assert')
+var asyncHooks = tryRequire('async_hooks')
 var http = require('http')
 var net = require('net')
 var onFinished = require('..')
+
+var describeAsyncHooks = typeof asyncHooks.AsyncLocalStorage === 'function'
+  ? describe
+  : describe.skip
 
 describe('onFinished(res, listener)', function () {
   it('should invoke listener given an unknown object', function (done) {
@@ -32,15 +37,57 @@ describe('onFinished(res, listener)', function () {
       sendGet(server)
     })
 
-    it('should fire when called after finish', function (done) {
-      var server = http.createServer(function (req, res) {
-        onFinished(res, function () {
-          onFinished(res, done)
+    describe('when called after finish', function () {
+      it('should fire when called after finish', function (done) {
+        var server = http.createServer(function (req, res) {
+          onFinished(res, function () {
+            onFinished(res, done)
+          })
+          setTimeout(res.end.bind(res), 0)
         })
-        setTimeout(res.end.bind(res), 0)
+
+        sendGet(server)
       })
 
-      sendGet(server)
+      describeAsyncHooks('when async local storage', function () {
+        it('should presist store in callback', function (done) {
+          var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+          var store = { foo: 'bar' }
+
+          var server = http.createServer(function (req, res) {
+            onFinished(res, function () {
+              asyncLocalStorage.run(store, function () {
+                onFinished(res, function () {
+                  assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+                  done()
+                })
+              })
+            })
+            setTimeout(res.end.bind(res), 0)
+          })
+
+          sendGet(server)
+        })
+      })
+    })
+
+    describeAsyncHooks('when async local storage', function () {
+      it('should presist store in callback', function (done) {
+        var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+        var store = { foo: 'bar' }
+
+        var server = http.createServer(function (req, res) {
+          asyncLocalStorage.run(store, function () {
+            onFinished(res, function () {
+              assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+              done()
+            })
+          })
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
+      })
     })
   })
 
@@ -385,16 +432,60 @@ describe('onFinished(req, listener)', function () {
       sendGet(server)
     })
 
-    it('should fire when called after finish', function (done) {
-      var server = http.createServer(function (req, res) {
-        onFinished(req, function () {
-          onFinished(req, done)
+    describe('when called after finish', function () {
+      it('should fire when called after finish', function (done) {
+        var server = http.createServer(function (req, res) {
+          onFinished(req, function () {
+            onFinished(req, done)
+          })
+          req.resume()
+          setTimeout(res.end.bind(res), 0)
         })
-        req.resume()
-        setTimeout(res.end.bind(res), 0)
+
+        sendGet(server)
       })
 
-      sendGet(server)
+      describeAsyncHooks('when async local storage', function () {
+        it('should presist store in callback', function (done) {
+          var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+          var store = { foo: 'bar' }
+
+          var server = http.createServer(function (req, res) {
+            onFinished(req, function () {
+              asyncLocalStorage.run(store, function () {
+                onFinished(req, function () {
+                  assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+                  done()
+                })
+              })
+            })
+            req.resume()
+            setTimeout(res.end.bind(res), 0)
+          })
+
+          sendGet(server)
+        })
+      })
+    })
+
+    describeAsyncHooks('when async local storage', function () {
+      it('should presist store in callback', function (done) {
+        var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+        var store = { foo: 'bar' }
+
+        var server = http.createServer(function (req, res) {
+          asyncLocalStorage.run(store, function () {
+            onFinished(req, function () {
+              assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+              done()
+            })
+          })
+          req.resume()
+          setTimeout(res.end.bind(res), 0)
+        })
+
+        sendGet(server)
+      })
     })
   })
 
@@ -1066,6 +1157,14 @@ function sendGet (server) {
       res.on('end', server.close.bind(server))
     })
   })
+}
+
+function tryRequire (name) {
+  try {
+    return require(name)
+  } catch (e) {
+    return {}
+  }
 }
 
 function writeRequest (socket, chunked) {

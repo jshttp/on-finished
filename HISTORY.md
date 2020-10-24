@@ -1,3 +1,8 @@
+unreleased
+==========
+
+  * Prevent loss of async hooks context
+
 2.3.0 / 2015-05-26
 ==================
 
