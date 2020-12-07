@@ -1,4 +1,7 @@
 language: node_js
+arch:
+  - amd64
+  - ppc64le
 node_js:
   - "0.8"
   - "0.10"
@@ -19,6 +22,28 @@ sudo: false
 cache:
   directories:
     - node_modules
+# ppc64le support code
+jobs:
+  exclude:
+    - arch: ppc64le
+      node_js:
+        - "0.8"
+    - arch: ppc64le
+      node_js:
+        - "0.10"
+    - arch: ppc64le
+      node_js:
+        - "0.12"
+    - arch: ppc64le
+      node_js:
+        - "1.8"
+    - arch: ppc64le
+      node_js:
+        - "2.5"
+    - arch: ppc64le
+      node_js:
+        - "3.3"
+    
 before_install:
   - |
     # Setup utility functions
