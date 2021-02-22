@@ -20,8 +20,6 @@ $ npm install on-finished
 
 ## API
 
-<!-- eslint-disable no-unused-vars -->
-
 ```js
 var onFinished = require('on-finished')
 ```
@@ -38,7 +36,7 @@ with the response, like open files.
 
 Listener is invoked as `listener(err, res)`.
 
-<!-- eslint-disable handle-callback-err, no-undef -->
+<!-- eslint-disable handle-callback-err -->
 
 ```js
 onFinished(res, function (err, res) {
@@ -59,7 +57,7 @@ after reading the data.
 
 Listener is invoked as `listener(err, req)`.
 
-<!-- eslint-disable handle-callback-err, no-undef, no-unused-vars -->
+<!-- eslint-disable handle-callback-err -->
 
 ```js
 var data = ''
