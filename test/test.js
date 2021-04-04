@@ -190,14 +190,12 @@ describe('onFinished(res, listener)', function () {
   describe('when calling many times on same response', function () {
     it('should not print warnings', function (done) {
       var server = http.createServer(function (req, res) {
-        var stderr = captureStderr(function () {
-          for (var i = 0; i < 400; i++) {
-            onFinished(res, noop)
-          }
-        })
-
+        var stderr = captureStderr()
+        for (var i = 0; i < 400; i++) {
+          onFinished(res, noop)
+        }
         onFinished(res, done)
-        assert.strictEqual(stderr, '')
+        assert.strictEqual(stderr(), '')
         res.end()
       })
 
@@ -537,14 +535,12 @@ describe('onFinished(req, listener)', function () {
   describe('when calling many times on same request', function () {
     it('should not print warnings', function (done) {
       var server = http.createServer(function (req, res) {
-        var stderr = captureStderr(function () {
-          for (var i = 0; i < 400; i++) {
-            onFinished(req, noop)
-          }
-        })
-
+        var stderr = captureStderr()
+        for (var i = 0; i < 400; i++) {
+          onFinished(req, noop)
+        }
         onFinished(req, done)
-        assert.strictEqual(stderr, '')
+        assert.strictEqual(stderr(), '')
         res.end()
       })
 
@@ -553,6 +549,38 @@ describe('onFinished(req, listener)', function () {
         http.get('http://127.0.0.1:' + port, function (res) {
           res.resume()
           res.on('end', server.close.bind(server))
+        })
+      })
+    })
+  })
+
+  describe('when a client is pipelining requests', function () {
+    it('should not print warnings', function (done) {
+      var stderr = captureStderr()
+      var server = http.createServer(function (req, res) {
+        onFinished(req, noop)
+        res.end()
+      })
+      server.on('close', function () {
+        assert.strictEqual(stderr(), '')
+        done()
+      })
+      server.listen(function () {
+        var pipelineCount = 12
+        net.connect(this.address().port, function () {
+          var socket = this
+          for (var i = 0; i < pipelineCount; i++) {
+            writeRequest(this)
+          }
+          var responses = ''
+          var resRe = /HTTP\/1.1/g
+          socket.on('data', function (chunk) {
+            responses += chunk
+            if (responses.match(resRe).length === pipelineCount) {
+              socket.end()
+              server.close()
+            }
+          })
         })
       })
     })
@@ -1031,21 +1059,18 @@ describe('isFinished(req)', function () {
   })
 })
 
-function captureStderr (fn) {
+function captureStderr () {
   var chunks = []
   var write = process.stderr.write
 
   process.stderr.write = function write (chunk, encoding) {
-    chunks.push(new Buffer(chunk, encoding)) // eslint-disable-line node/no-deprecated-api
+    chunks.push(Buffer.from ? Buffer.from(chunk, encoding) : new Buffer(chunk, encoding)) // eslint-disable-line node/no-deprecated-api
   }
 
-  try {
-    fn()
-  } finally {
+  return function restore () {
     process.stderr.write = write
+    return Buffer.concat(chunks).toString('utf8')
   }
-
-  return Buffer.concat(chunks).toString('utf8')
 }
 
 function close (server, callback) {
