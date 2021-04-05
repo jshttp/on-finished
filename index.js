@@ -110,13 +110,18 @@ function attachFinishedListener (msg, callback) {
     if (finished) return
     if (eeMsg !== eeSocket) return
 
+    var attached = socket.__onFinished
+    if (!attached || !attached.queue) {
+      attached = socket.__onFinished = createListener(socket)
+      eeSocket = first([[socket, 'error', 'close']], attached)
+    }
     // finished on first socket event
-    eeSocket = first([[socket, 'error', 'close']], onFinish)
+    attached.queue.push(onFinish)
   }
 
   if (msg.socket) {
     // socket already assigned
-    onSocket(msg.socket)
+    defer(onSocket, msg.socket)
     return
   }
 
