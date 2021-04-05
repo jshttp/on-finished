@@ -94,8 +94,6 @@ function attachFinishedListener (msg, callback) {
 
   function onFinish (error) {
     eeMsg.cancel()
-    eeSocket.cancel()
-
     finished = true
     callback(error)
   }
@@ -121,7 +119,7 @@ function attachFinishedListener (msg, callback) {
 
   if (msg.socket) {
     // socket already assigned
-    defer(onSocket, msg.socket)
+    onSocket(msg.socket)
     return
   }
 
