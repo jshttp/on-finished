@@ -1,8 +1,7 @@
-
-var assert = require('assert')
-var http = require('http')
-var net = require('net')
-var onFinished = require('..')
+import assert from 'node:assert'
+import http from 'node:http'
+import net from 'node:net'
+import onFinished, { isFinished } from '../index.js'
 
 describe('onFinished(res, listener)', function () {
   it('should invoke listener given an unknown object', function (done) {
@@ -214,12 +213,12 @@ describe('onFinished(res, listener)', function () {
 
 describe('isFinished(res)', function () {
   it('should return undefined for unknown object', function () {
-    assert.strictEqual(onFinished.isFinished({}), undefined)
+    assert.strictEqual(isFinished({}), undefined)
   })
 
   it('should be false before response finishes', function (done) {
     var server = http.createServer(function (req, res) {
-      assert.ok(!onFinished.isFinished(res))
+      assert.ok(!isFinished(res))
       res.end()
       done()
     })
@@ -231,7 +230,7 @@ describe('isFinished(res)', function () {
     var server = http.createServer(function (req, res) {
       onFinished(res, function (err) {
         assert.ifError(err)
-        assert.ok(onFinished.isFinished(res))
+        assert.ok(isFinished(res))
         done()
       })
 
@@ -255,8 +254,8 @@ describe('isFinished(res)', function () {
             return
           }
 
-          assert.ok(!onFinished.isFinished(responses[0]))
-          assert.ok(!onFinished.isFinished(responses[1]))
+          assert.ok(!isFinished(responses[0]))
+          assert.ok(!isFinished(responses[1]))
 
           responses[0].end()
           responses[1].end()
@@ -322,7 +321,7 @@ describe('isFinished(res)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
           assert.ok(err)
-          assert.ok(onFinished.isFinished(res))
+          assert.ok(isFinished(res))
           server.close(done)
         })
 
@@ -345,7 +344,7 @@ describe('isFinished(res)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
           assert.ifError(err)
-          assert.ok(onFinished.isFinished(res))
+          assert.ok(isFinished(res))
           server.close(done)
         })
         setTimeout(client.abort.bind(client), 0)
@@ -758,12 +757,12 @@ describe('onFinished(req, listener)', function () {
 
 describe('isFinished(req)', function () {
   it('should return undefined for unknown object', function () {
-    assert.strictEqual(onFinished.isFinished({}), undefined)
+    assert.strictEqual(isFinished({}), undefined)
   })
 
   it('should be false before request finishes', function (done) {
     var server = http.createServer(function (req, res) {
-      assert.ok(!onFinished.isFinished(req))
+      assert.ok(!isFinished(req))
       req.resume()
       res.end()
       done()
@@ -776,7 +775,7 @@ describe('isFinished(req)', function () {
     var server = http.createServer(function (req, res) {
       onFinished(req, function (err) {
         assert.ifError(err)
-        assert.ok(onFinished.isFinished(req))
+        assert.ok(isFinished(req))
         done()
       })
 
@@ -790,11 +789,11 @@ describe('isFinished(req)', function () {
   describe('when request data buffered', function () {
     it('should be false before request finishes', function (done) {
       var server = http.createServer(function (req, res) {
-        assert.ok(!onFinished.isFinished(req))
+        assert.ok(!isFinished(req))
 
         req.pause()
         setTimeout(function () {
-          assert.ok(!onFinished.isFinished(req))
+          assert.ok(!isFinished(req))
           req.resume()
           res.end()
           done()
@@ -810,7 +809,7 @@ describe('isFinished(req)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err) {
           assert.ok(err)
-          assert.ok(onFinished.isFinished(req))
+          assert.ok(isFinished(req))
           server.close(done)
         })
 
@@ -833,7 +832,7 @@ describe('isFinished(req)', function () {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
           assert.ifError(err)
-          assert.ok(onFinished.isFinished(req))
+          assert.ok(isFinished(req))
           server.close(done)
         })
         setTimeout(client.abort.bind(client), 0)
@@ -855,7 +854,7 @@ describe('isFinished(req)', function () {
       })
 
       server.on('connect', function (req, socket, bodyHead) {
-        assert.ok(onFinished.isFinished(req))
+        assert.ok(isFinished(req))
         assert.strictEqual(bodyHead.length, 0)
         req.resume()
 
@@ -897,7 +896,7 @@ describe('isFinished(req)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.ok(onFinished.isFinished(req))
+          assert.ok(isFinished(req))
           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
           socket.write('HTTP/1.1 200 OK\r\n\r\n')
         })
@@ -941,7 +940,7 @@ describe('isFinished(req)', function () {
       })
 
       server.on('upgrade', function (req, socket, bodyHead) {
-        assert.ok(onFinished.isFinished(req))
+        assert.ok(isFinished(req))
         assert.strictEqual(bodyHead.length, 0)
         req.resume()
 
@@ -988,7 +987,7 @@ describe('isFinished(req)', function () {
 
         onFinished(req, function (err) {
           assert.ifError(err)
-          assert.ok(onFinished.isFinished(req))
+          assert.ok(isFinished(req))
           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
 
           socket.write('HTTP/1.1 101 Switching Protocols\r\n')

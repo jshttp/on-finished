@@ -21,7 +21,7 @@ $ npm install on-finished
 ## API
 
 ```js
-var onFinished = require('on-finished')
+import onFinished from 'on-finished'
 ```
 
 ### onFinished(res, listener)
@@ -72,12 +72,12 @@ onFinished(req, function (err, req) {
 })
 ```
 
-### onFinished.isFinished(res)
+### isFinished(res)
 
 Determine if `res` is already finished. This would be useful to check and
 not even start certain operations if the response has already finished.
 
-### onFinished.isFinished(req)
+### isFinished(req)
 
 Determine if `req` is already finished. This would be useful to check and
 not even start certain operations if the request has already finished.
@@ -133,10 +133,10 @@ The following code ensures that file descriptors are always closed
 once the response finishes.
 
 ```js
-var destroy = require('destroy')
-var fs = require('fs')
-var http = require('http')
-var onFinished = require('on-finished')
+import destroy from 'destroy'
+import fs from 'node:fs'
+import http from 'node:http'
+import onFinished from 'on-finished'
 
 http.createServer(function onRequest (req, res) {
   var stream = fs.createReadStream('package.json')

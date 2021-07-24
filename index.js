@@ -5,29 +5,19 @@
  * MIT Licensed
  */
 
-'use strict'
-
-/**
- * Module exports.
- * @public
- */
-
-module.exports = onFinished
-module.exports.isFinished = isFinished
-
 /**
  * Module dependencies.
  * @private
  */
 
-var first = require('ee-first')
+import first from 'ee-first'
 
 /**
  * Variables.
  * @private
  */
 
-/* istanbul ignore next */
+/* c8 ignore next */
 var defer = typeof setImmediate === 'function'
   ? setImmediate
   : function (fn) { process.nextTick(fn.bind.apply(fn, arguments)) }
@@ -42,7 +32,7 @@ var defer = typeof setImmediate === 'function'
  * @public
  */
 
-function onFinished (msg, listener) {
+export default function onFinished (msg, listener) {
   if (isFinished(msg) !== false) {
     defer(listener, null, msg)
     return msg
@@ -62,7 +52,7 @@ function onFinished (msg, listener) {
  * @public
  */
 
-function isFinished (msg) {
+export function isFinished (msg) {
   var socket = msg.socket
 
   if (typeof msg.finished === 'boolean') {
@@ -122,11 +112,6 @@ function attachFinishedListener (msg, callback) {
 
   // wait for socket to be assigned
   msg.on('socket', onSocket)
-
-  if (msg.socket === undefined) {
-    // istanbul ignore next: node.js 0.8 patch
-    patchAssignSocket(msg, onSocket)
-  }
 }
 
 /**
@@ -173,25 +158,4 @@ function createListener (msg) {
   listener.queue = []
 
   return listener
-}
-
-/**
- * Patch ServerResponse.prototype.assignSocket for node.js 0.8.
- *
- * @param {ServerResponse} res
- * @param {function} callback
- * @private
- */
-
-// istanbul ignore next: node.js 0.8 patch
-function patchAssignSocket (res, callback) {
-  var assignSocket = res.assignSocket
-
-  if (typeof assignSocket !== 'function') return
-
-  // res.on('socket', callback) is broken in 0.8
-  res.assignSocket = function _assignSocket (socket) {
-    assignSocket.call(this, socket)
-    callback(socket)
-  }
 }
