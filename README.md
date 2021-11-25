@@ -3,7 +3,7 @@
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
 [![Node.js Version][node-image]][node-url]
-[![Build Status][travis-image]][travis-url]
+[![Build Status][ci-image]][ci-url]
 [![Coverage Status][coveralls-image]][coveralls-url]
 
 Execute a callback when a HTTP request closes, finishes, or errors.
@@ -151,6 +151,8 @@ http.createServer(function onRequest (req, res) {
 
 [MIT](LICENSE)
 
+[ci-image]: https://badgen.net/github/checks/jshttp/on-finished/master?label=ci
+[ci-url]: https://github.com/jshttp/on-finished/actions/workflows/ci.yml
 [coveralls-image]: https://badgen.net/coveralls/c/github/jshttp/on-finished/master
 [coveralls-url]: https://coveralls.io/r/jshttp/on-finished?branch=master
 [node-image]: https://badgen.net/npm/node/on-finished
@@ -158,5 +160,3 @@ http.createServer(function onRequest (req, res) {
 [npm-downloads-image]: https://badgen.net/npm/dm/on-finished
 [npm-url]: https://npmjs.org/package/on-finished
 [npm-version-image]: https://badgen.net/npm/v/on-finished
-[travis-image]: https://badgen.net/travis/jshttp/on-finished/master
-[travis-url]: https://travis-ci.org/jshttp/on-finished
