@@ -105,7 +105,7 @@ interface**. This means if the `CONNECT` request contains a request entity,
 the request will be considered "finished" even before it has been read.
 
 There is no such thing as a response object to a `CONNECT` request in
-Node.js, so there is no support for for one.
+Node.js, so there is no support for one.
 
 ### HTTP Upgrade request
 
@@ -125,7 +125,7 @@ entity, the request will be considered "finished" even before it has been
 read.
 
 There is no such thing as a response object to a `Upgrade` request in
-Node.js, so there is no support for for one.
+Node.js, so there is no support for one.
 
 ## Example
 
