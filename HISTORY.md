@@ -1,5 +1,5 @@
-unreleased
-==========
+2.4.0 / 2022-02-21
+==================
 
   * Prevent loss of async hooks context
 
