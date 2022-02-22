@@ -224,5 +224,9 @@ function wrap (fn) {
 
   // AsyncResource.bind static method backported
   var res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
+  if(!res.runInAsyncScope) {
+    /* istanbul ignore next */
+    return fn
+  }
   return res.runInAsyncScope.bind(res, fn, null)
 }
