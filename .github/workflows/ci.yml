@@ -88,9 +88,11 @@ jobs:
 
         - name: Node.js 11.x
           node-version: "11.15"
+          npm-i: mocha@9.2.2
 
         - name: Node.js 12.x
           node-version: "12.22"
+          npm-i: mocha@9.2.2
 
         - name: Node.js 13.x
           node-version: "13.14"
