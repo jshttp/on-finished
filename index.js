@@ -168,7 +168,7 @@ function createListener (msg) {
     listener.queue = null
 
     for (var i = 0; i < queue.length; i++) {
-      if (msg instanceof http2.Http2ServerRequest) {
+      if (msg.httpVersionMajor === 2) {
         queue[i]()
       } else {
         queue[i](err, msg)
