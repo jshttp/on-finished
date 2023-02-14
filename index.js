@@ -22,6 +22,7 @@ module.exports.isFinished = isFinished
 
 var asyncHooks = tryRequireAsyncHooks()
 var first = require('ee-first')
+var { Http2ServerRequest } = require('http2')
 
 /**
  * Variables.
@@ -167,7 +168,11 @@ function createListener (msg) {
     listener.queue = null
 
     for (var i = 0; i < queue.length; i++) {
-      queue[i](err, msg)
+      if (msg instanceof Http2ServerRequest) {
+        queue[i]();
+      } else {
+        queue[i](err, msg)
+      }
     }
   }
 
