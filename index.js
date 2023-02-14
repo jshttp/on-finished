@@ -22,7 +22,6 @@ module.exports.isFinished = isFinished
 
 var asyncHooks = tryRequireAsyncHooks()
 var first = require('ee-first')
-var http2 = require('http2')
 
 /**
  * Variables.
