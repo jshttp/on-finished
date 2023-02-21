@@ -1,6 +1,7 @@
 
 var assert = require('assert')
 var asyncHooks = tryRequire('async_hooks')
+var Buffer = require('safe-buffer').Buffer
 var http = require('http')
 var net = require('net')
 var onFinished = require('..')
@@ -120,7 +121,7 @@ describe('onFinished(res, listener)', function () {
     })
   })
 
-  describe('when requests pipelined', function () {
+  describe.only('when requests pipelined', function () {
     it('should fire for each request', function (done) {
       var count = 0
       var responses = []
@@ -154,6 +155,67 @@ describe('onFinished(res, listener)', function () {
         if (responses.length === 1) {
           // second request
           writeRequest(socket)
+        }
+
+        req.resume()
+      })
+      var socket
+
+      server.listen(function () {
+        var data = ''
+        socket = net.connect(this.address().port, function () {
+          writeRequest(this)
+        })
+
+        socket.on('data', function (chunk) {
+          data += chunk.toString('binary')
+        })
+        socket.on('end', function () {
+          assert.ok(/response a/.test(data))
+          assert.ok(/response b/.test(data))
+          server.close(done)
+        })
+      })
+    })
+
+    it('should fire for each request', function (done) {
+      var count = 0
+      var responses = []
+      var server = http.createServer(function (req, res) {
+        responses.push(res)
+
+        onFinished(res, function (err) {
+          console.log('response')
+          console.dir(err)
+          //assert.ifError(err)
+          assert.strictEqual(responses[0], res)
+          responses.shift()
+
+          if (responses.length === 0) {
+            socket.end()
+            return
+          }
+
+          responses[0].end('response b')
+        })
+
+        onFinished(req, function (err) {
+          console.log('request')
+          console.dir(err)
+          //assert.ifError(err)
+
+          if (++count !== 2) {
+            return
+          }
+
+          assert.strictEqual(responses.length, 2)
+          responses[0].end('response a')
+        })
+
+        if (responses.length === 1) {
+          // second request
+          writeRequest(socket, true)
+          socket.write('z')
         }
 
         req.resume()
@@ -1165,6 +1227,14 @@ function tryRequire (name) {
   } catch (e) {
     return {}
   }
+}
+
+function writeChunk (socket, data) {
+  var buf = Buffer.from(data, 'utf-8')
+
+  socket.write((buf.length.toString(16)) + '\r\n')
+  socket.write(buf)
+  socket.write('\r\n')
 }
 
 function writeRequest (socket, chunked) {

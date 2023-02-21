@@ -104,7 +104,9 @@ function attachFinishedListener (msg, callback) {
   // finished on first message event
   eeMsg = eeSocket = first([[msg, 'end', 'finish']], onFinish)
 
+  var w = false
   function onSocket (socket) {
+    if (w) console.log('got socket')
     // remove listener
     msg.removeListener('socket', onSocket)
 
@@ -120,6 +122,9 @@ function attachFinishedListener (msg, callback) {
     onSocket(msg.socket)
     return
   }
+
+  w = true
+  console.log('wait for socket')
 
   // wait for socket to be assigned
   msg.on('socket', onSocket)
