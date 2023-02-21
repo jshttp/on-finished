@@ -185,9 +185,14 @@ describe('onFinished(res, listener)', function () {
         responses.push(res)
 
         onFinished(res, function (err) {
-          console.log('response')
-          console.dir(err)
-          //assert.ifError(err)
+          console.log('finished res ' + req.url)
+          if (req.url === '/2') {
+            assert.ifError(err)
+          } else {
+            assert.ok(err)
+            assert.strictEqual(err.code, 'HPE_INVALID_CHUNK_SIZE')
+          }
+
           assert.strictEqual(responses[0], res)
           responses.shift()
 
@@ -200,21 +205,25 @@ describe('onFinished(res, listener)', function () {
         })
 
         onFinished(req, function (err) {
-          console.log('request')
-          console.dir(err)
-          //assert.ifError(err)
+          console.log('finished req' + req.url)
+          if (req.url === '/1') {
+            assert.ifError(err)
+          } else {
+            assert.ok(err)
+            assert.strictEqual(err.code, 'HPE_INVALID_CHUNK_SIZE')
+          }
 
           if (++count !== 2) {
             return
           }
 
-          assert.strictEqual(responses.length, 2)
-          responses[0].end('response a')
+          assert.strictEqual(responses.length, 1)
+          assert.ok(onFinished.isFinished(responses[0]))
         })
 
         if (responses.length === 1) {
           // second request
-          writeRequest(socket, true)
+          writeRequest(socket, true, '/2')
           socket.write('z')
         }
 
@@ -225,15 +234,16 @@ describe('onFinished(res, listener)', function () {
       server.listen(function () {
         var data = ''
         socket = net.connect(this.address().port, function () {
-          writeRequest(this)
+          writeRequest(this, false, '/1')
         })
 
         socket.on('data', function (chunk) {
           data += chunk.toString('binary')
         })
         socket.on('end', function () {
-          assert.ok(/response a/.test(data))
-          assert.ok(/response b/.test(data))
+          console.log(data)
+          assert.strictEqual(count, 2)
+          assert.strictEqual(responses.length, 0)
           server.close(done)
         })
       })
@@ -1237,8 +1247,8 @@ function writeChunk (socket, data) {
   socket.write('\r\n')
 }
 
-function writeRequest (socket, chunked) {
-  socket.write('GET / HTTP/1.1\r\n')
+function writeRequest (socket, chunked, path) {
+  socket.write('GET ' + (path || '/') + ' HTTP/1.1\r\n')
   socket.write('Host: localhost\r\n')
   socket.write('Connection: keep-alive\r\n')
 
