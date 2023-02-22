@@ -186,12 +186,8 @@ describe('onFinished(res, listener)', function () {
 
         onFinished(res, function (err) {
           console.log('finished res ' + req.url)
-          if (req.url === '/2') {
-            assert.ifError(err)
-          } else {
-            assert.ok(err)
-            assert.strictEqual(err.code, 'HPE_INVALID_CHUNK_SIZE')
-          }
+          assert.ok(err)
+          assert.strictEqual(err.code, 'HPE_INVALID_CHUNK_SIZE')
 
           assert.strictEqual(responses[0], res)
           responses.shift()

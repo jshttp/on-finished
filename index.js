@@ -101,6 +101,12 @@ function attachFinishedListener (msg, callback) {
     callback(error)
   }
 
+  var emit = msg.emit
+  msg.emit = function () {
+    console.dir(arguments)
+    return emit.apply(this, arguments)
+  }
+
   // finished on first message event
   eeMsg = eeSocket = first([[msg, 'end', 'finish']], onFinish)
 
