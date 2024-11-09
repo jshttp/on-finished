@@ -199,13 +199,15 @@ function patchAssignSocket (res, callback) {
 
 /**
  * Try to require async_hooks
+ *
+ * @returns {Object}
  * @private
  */
 
 function tryRequireAsyncHooks () {
   try {
     return require('async_hooks')
-  } catch (e) {
+  } catch {
     return {}
   }
 }
