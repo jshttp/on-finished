@@ -235,7 +235,7 @@ function wrap (fn) {
 }
 
 /**
- * Determines if a writable stream has finished. 
+ * Determines if a writable stream has finished.
  *
  * @param {Object} res
  * @param {boolean} [res.writableFinished]
@@ -243,6 +243,6 @@ function wrap (fn) {
  * @returns {boolean}
  * @private
  */
-function writableEnded(res) {
+function writableEnded (res) {
   return typeof res.writableEnded !== 'boolean' ? res.finished : res.writableEnded
 }
