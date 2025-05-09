@@ -2,7 +2,7 @@ name: ci
 on:
   push:
     branches:
-      - 3.x
+      - v3
     paths-ignore:
       - '*.md'
   pull_request:
