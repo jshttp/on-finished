@@ -23,7 +23,7 @@
     "nyc": "15.1.0"
   },
   "engines": {
-    "node": ">= 0.8"
+    "node": ">=18"
   },
   "files": [
     "HISTORY.md",
