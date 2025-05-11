@@ -20,7 +20,7 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-var asyncHooks = tryRequireAsyncHooks()
+const asyncHooks = require('node:async_hooks')
 var first = require('ee-first')
 
 /**
@@ -198,36 +198,14 @@ function patchAssignSocket (res, callback) {
 }
 
 /**
- * Try to require async_hooks
- * @private
- */
-
-function tryRequireAsyncHooks () {
-  try {
-    return require('async_hooks')
-  } catch (e) {
-    return {}
-  }
-}
-
-/**
  * Wrap function with async resource, if possible.
  * AsyncResource.bind static method backported.
  * @private
  */
 
 function wrap (fn) {
-  var res
-
   // create anonymous resource
-  if (asyncHooks.AsyncResource) {
-    res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
-  }
-
-  // incompatible node.js
-  if (!res || !res.runInAsyncScope) {
-    return fn
-  }
+  const res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
 
   // return bound function
   return res.runInAsyncScope.bind(res, fn, null)
