@@ -65,10 +65,11 @@ function onFinished (msg, listener) {
 
 function isFinished (msg) {
   var socket = msg.socket
+  var finished = writableEnded(msg)
 
-  if (typeof msg.finished === 'boolean') {
+  if (typeof finished === 'boolean') {
     // OutgoingMessage
-    return Boolean(msg.finished || (socket && !socket.writable))
+    return Boolean(finished || (socket && !socket.writable))
   }
 
   if (typeof msg.complete === 'boolean') {
@@ -231,4 +232,17 @@ function wrap (fn) {
 
   // return bound function
   return res.runInAsyncScope.bind(res, fn, null)
+}
+
+/**
+ * Determines if a writable stream has finished.
+ *
+ * @param {Object} res
+ * @param {boolean} [res.writableFinished]
+ * @param {boolean} [res.finished]
+ * @returns {boolean}
+ * @private
+ */
+function writableEnded (res) {
+  return typeof res.writableEnded !== 'boolean' ? res.finished : res.writableEnded
 }
