@@ -213,22 +213,18 @@ function tryRequireAsyncHooks () {
 /**
  * Wrap function with async resource, if possible.
  * AsyncResource.bind static method backported.
+ *
+ * @param {Function} fn
+ * @returns {Function}
  * @private
  */
 
 function wrap (fn) {
-  var res
-
-  // create anonymous resource
   if (asyncHooks.AsyncResource) {
-    res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
+    var res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
+    if (res.runInAsyncScope) {
+      return res.runInAsyncScope.bind(res, fn, null)
+    }
   }
-
-  // incompatible node.js
-  if (!res || !res.runInAsyncScope) {
-    return fn
-  }
-
-  // return bound function
-  return res.runInAsyncScope.bind(res, fn, null)
+  return fn
 }
