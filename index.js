@@ -20,18 +20,8 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-var asyncHooks = tryRequireAsyncHooks()
-var first = require('ee-first')
-
-/**
- * Variables.
- * @private
- */
-
-/* istanbul ignore next */
-var defer = typeof setImmediate === 'function'
-  ? setImmediate
-  : function (fn) { process.nextTick(fn.bind.apply(fn, arguments)) }
+const asyncHooks = tryRequireAsyncHooks()
+const stream = require('stream')
 
 /**
  * Invoke callback when the response has finished, useful for
@@ -45,7 +35,7 @@ var defer = typeof setImmediate === 'function'
 
 function onFinished (msg, listener) {
   if (isFinished(msg) !== false) {
-    defer(listener, null, msg)
+    setImmediate(listener, null, msg)
     return msg
   }
 
@@ -89,44 +79,65 @@ function isFinished (msg) {
  */
 
 function attachFinishedListener (msg, callback) {
-  var eeMsg
-  var eeSocket
-  var finished = false
+  let finished = false
+  let cleanupSocket
 
   function onFinish (error) {
-    eeMsg.cancel()
-    eeSocket.cancel()
-
+    if (finished) return
     finished = true
     callback(error)
   }
 
-  // finished on first message event
-  eeMsg = eeSocket = first([[msg, 'end', 'finish']], onFinish)
+  const cleanupFinished = stream.finished(msg, (error) => {
+    cleanupFinished()
+    if (cleanupSocket) {
+      cleanupSocket()
+    }
+
+    // ignore premature close error
+    if (error && error.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+      onFinish(error)
+    } else {
+      onFinish()
+    }
+  })
 
   function onSocket (socket) {
     // remove listener
     msg.removeListener('socket', onSocket)
 
     if (finished) return
-    if (eeMsg !== eeSocket) return
+
+    function onSocketErrorOrClose (error) {
+      // remove listeners
+      socket.removeListener('error', onSocketErrorOrClose)
+      socket.removeListener('close', onSocketErrorOrClose)
+
+      onFinish(error)
+    }
 
     // finished on first socket event
-    eeSocket = first([[socket, 'error', 'close']], onFinish)
+    socket.on('error', onSocketErrorOrClose)
+    socket.on('close', onSocketErrorOrClose)
+
+    // cleanup socket listeners
+    cleanupSocket = function () {
+      socket.removeListener('error', onSocketErrorOrClose)
+      socket.removeListener('close', onSocketErrorOrClose)
+    }
   }
 
   if (msg.socket) {
     // socket already assigned
     onSocket(msg.socket)
-    return
-  }
+  } else {
+    // wait for socket to be assigned
+    msg.on('socket', onSocket)
 
-  // wait for socket to be assigned
-  msg.on('socket', onSocket)
-
-  if (msg.socket === undefined) {
-    // istanbul ignore next: node.js 0.8 patch
-    patchAssignSocket(msg, onSocket)
+    // cleanup socket listener in case the socket is never assigned
+    cleanupSocket = function () {
+      msg.removeListener('socket', onSocket)
+    }
   }
 }
 
@@ -134,12 +145,12 @@ function attachFinishedListener (msg, callback) {
  * Attach the listener to the message.
  *
  * @param {object} msg
- * @return {function}
+ * @param {function} listener
  * @private
  */
 
 function attachListener (msg, listener) {
-  var attached = msg.__onFinished
+  let attached = msg.__onFinished
 
   // create a private single listener with queue
   if (!attached || !attached.queue) {
@@ -174,27 +185,6 @@ function createListener (msg) {
   listener.queue = []
 
   return listener
-}
-
-/**
- * Patch ServerResponse.prototype.assignSocket for node.js 0.8.
- *
- * @param {ServerResponse} res
- * @param {function} callback
- * @private
- */
-
-// istanbul ignore next: node.js 0.8 patch
-function patchAssignSocket (res, callback) {
-  var assignSocket = res.assignSocket
-
-  if (typeof assignSocket !== 'function') return
-
-  // res.on('socket', callback) is broken in 0.8
-  res.assignSocket = function _assignSocket (socket) {
-    assignSocket.call(this, socket)
-    callback(socket)
-  }
 }
 
 /**
