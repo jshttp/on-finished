@@ -20,8 +20,8 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-const asyncHooks = tryRequireAsyncHooks()
-const stream = require('stream')
+const asyncHooks = require('node:async_hooks')
+const stream = require('node:stream')
 
 /**
  * Invoke callback when the response has finished, useful for
@@ -188,36 +188,14 @@ function createListener (msg) {
 }
 
 /**
- * Try to require async_hooks
- * @private
- */
-
-function tryRequireAsyncHooks () {
-  try {
-    return require('async_hooks')
-  } catch (e) {
-    return {}
-  }
-}
-
-/**
  * Wrap function with async resource, if possible.
  * AsyncResource.bind static method backported.
  * @private
  */
 
 function wrap (fn) {
-  var res
-
   // create anonymous resource
-  if (asyncHooks.AsyncResource) {
-    res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
-  }
-
-  // incompatible node.js
-  if (!res || !res.runInAsyncScope) {
-    return fn
-  }
+  const res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
 
   // return bound function
   return res.runInAsyncScope.bind(res, fn, null)
