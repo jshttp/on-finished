@@ -2,6 +2,7 @@ unreleased
 ==================
 
   * Breaking Change: Node.js 18 is the minimum supported version
+  * Validate that passed `listener` is a function
 
 2.4.1 / 2022-02-22
 ==================
