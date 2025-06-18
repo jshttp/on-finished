@@ -1,13 +1,8 @@
-
-var assert = require('assert')
-var asyncHooks = tryRequire('async_hooks')
-var http = require('http')
-var net = require('net')
-var onFinished = require('..')
-
-var describeAsyncHooks = typeof asyncHooks.AsyncLocalStorage === 'function'
-  ? describe
-  : describe.skip
+const assert = require('node:assert')
+const { AsyncLocalStorage } = require('node:async_hooks')
+const http = require('node:http')
+const net = require('node:net')
+const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
   it('should invoke listener given an unknown object', function (done) {
@@ -49,9 +44,9 @@ describe('onFinished(res, listener)', function () {
         sendGet(server)
       })
 
-      describeAsyncHooks('when async local storage', function () {
+      describe('when async local storage', function () {
         it('should presist store in callback', function (done) {
-          var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+          var asyncLocalStorage = new AsyncLocalStorage()
           var store = { foo: 'bar' }
 
           var server = http.createServer(function (req, res) {
@@ -71,9 +66,9 @@ describe('onFinished(res, listener)', function () {
       })
     })
 
-    describeAsyncHooks('when async local storage', function () {
+    describe('when async local storage', function () {
       it('should presist store in callback', function (done) {
-        var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+        var asyncLocalStorage = new AsyncLocalStorage()
         var store = { foo: 'bar' }
 
         var server = http.createServer(function (req, res) {
@@ -445,9 +440,9 @@ describe('onFinished(req, listener)', function () {
         sendGet(server)
       })
 
-      describeAsyncHooks('when async local storage', function () {
+      describe('when async local storage', function () {
         it('should presist store in callback', function (done) {
-          var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+          var asyncLocalStorage = new AsyncLocalStorage()
           var store = { foo: 'bar' }
 
           var server = http.createServer(function (req, res) {
@@ -468,9 +463,9 @@ describe('onFinished(req, listener)', function () {
       })
     })
 
-    describeAsyncHooks('when async local storage', function () {
+    describe('when async local storage', function () {
       it('should presist store in callback', function (done) {
-        var asyncLocalStorage = new asyncHooks.AsyncLocalStorage()
+        var asyncLocalStorage = new AsyncLocalStorage()
         var store = { foo: 'bar' }
 
         var server = http.createServer(function (req, res) {
@@ -1157,14 +1152,6 @@ function sendGet (server) {
       res.on('end', server.close.bind(server))
     })
   })
-}
-
-function tryRequire (name) {
-  try {
-    return require(name)
-  } catch (e) {
-    return {}
-  }
 }
 
 function writeRequest (socket, chunked) {
