@@ -23,6 +23,8 @@ module.exports.isFinished = isFinished
 const asyncHooks = require('async_hooks')
 const stream = require('stream')
 
+const kOnFinished = Symbol('onFinished')
+
 /**
  * Invoke callback when the response has finished, useful for
  * cleaning up resources afterwards.
@@ -154,11 +156,11 @@ function attachFinishedListener (msg, callback) {
  */
 
 function attachListener (msg, listener) {
-  let attached = msg.__onFinished
+  let attached = msg[kOnFinished]
 
   // create a private single listener with queue
   if (!attached || !attached.queue) {
-    attached = msg.__onFinished = createListener(msg)
+    attached = msg[kOnFinished] = createListener(msg)
     attachFinishedListener(msg, attached)
   }
 
@@ -175,13 +177,13 @@ function attachListener (msg, listener) {
 
 function createListener (msg) {
   function listener (err) {
-    if (msg.__onFinished === listener) msg.__onFinished = null
+    if (msg[kOnFinished] === listener) msg[kOnFinished] = null
     if (!listener.queue) return
 
-    var queue = listener.queue
+    const queue = listener.queue
     listener.queue = null
 
-    for (var i = 0; i < queue.length; i++) {
+    for (let i = 0; i < queue.length; i++) {
       queue[i](err, msg)
     }
   }
