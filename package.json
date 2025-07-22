@@ -8,6 +8,10 @@
   ],
   "license": "MIT",
   "repository": "jshttp/on-finished",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/express"
+  },
   "dependencies": {
     "ee-first": "1.1.1"
   },
