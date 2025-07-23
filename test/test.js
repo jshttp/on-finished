@@ -1122,7 +1122,7 @@ function captureStderr (fn) {
   var write = process.stderr.write
 
   process.stderr.write = function write (chunk, encoding) {
-    chunks.push(new Buffer(chunk, encoding)) // eslint-disable-line node/no-deprecated-api
+    chunks.push(Buffer.from(chunk, encoding))
   }
 
   try {
