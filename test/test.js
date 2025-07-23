@@ -266,8 +266,8 @@ describe('isFinished(res)', function () {
 
   it('should be false before response finishes', function (done) {
     var server = http.createServer(function (req, res) {
-      assert.ok(!onFinished.isFinished(res))
       res.end()
+      assert.ok(!onFinished.isFinished(res))
       done()
     })
 
