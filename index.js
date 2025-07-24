@@ -238,8 +238,6 @@ function wrap (fn) {
  * Determines if a writable stream has finished.
  *
  * @param {Object} res
- * @param {boolean} [res.writableFinished]
- * @param {boolean} [res.finished]
  * @returns {boolean}
  * @private
  */
