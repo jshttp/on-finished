@@ -1,7 +1,7 @@
-const assert = require('node:assert')
-const { AsyncLocalStorage } = require('node:async_hooks')
-const http = require('node:http')
-const net = require('node:net')
+const assert = require('assert')
+const { AsyncLocalStorage } = require('async_hooks')
+const http = require('http')
+const net = require('net')
 const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
