@@ -23,6 +23,9 @@ module.exports.isFinished = isFinished
 const asyncHooks = require('node:async_hooks')
 const stream = require('node:stream')
 
+/** Symbol to store the listener on the message.
+ * @private
+ */
 const kOnFinished = Symbol('onFinished')
 
 /**
