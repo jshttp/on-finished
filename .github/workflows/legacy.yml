@@ -1,0 +1,133 @@
+name: legacy support
+
+on:
+  push:
+    branches:
+      - v3
+  pull_request:
+    branches:
+      - v3
+
+permissions:
+  contents: read
+
+# Cancel in progress workflows
+# in the scenario where we already had a run going for that PR/branch/tag but then triggered a new run
+concurrency:
+  group: "${{ github.workflow }} ✨ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        name:
+        - Node.js 10.x
+        - Node.js 11.x
+        - Node.js 12.x
+        - Node.js 13.x
+        - Node.js 14.x
+        - Node.js 15.x
+        - Node.js 16.x
+        - Node.js 17.x
+
+        include:
+        - name: Node.js 10.x
+          node-version: "10"
+          npm-i: mocha@8.4.0
+
+        - name: Node.js 11.x
+          node-version: "11"
+          npm-i: mocha@8.4.0
+
+        - name: Node.js 12.x
+          node-version: "12"
+
+        - name: Node.js 13.x
+          node-version: "13"
+
+        - name: Node.js 14.x
+          node-version: "14"
+
+        - name: Node.js 15.x
+          node-version: "15"
+
+        - name: Node.js 16.x
+          node-version: "16"
+
+        - name: Node.js 17.x
+          node-version: "17"
+
+
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Install Node.js ${{ matrix.node-version }}
+      shell: bash -eo pipefail -l {0}
+      run: |
+        nvm install --default ${{ matrix.node-version }}
+        dirname "$(nvm which ${{ matrix.node-version }})" >> "$GITHUB_PATH"
+
+    - name: Install npm module(s) ${{ matrix.npm-i }}
+      run: npm install --save-dev ${{ matrix.npm-i }}
+      if: matrix.npm-i != ''
+
+
+    - name: Install Node.js dependencies
+      run: npm install
+
+    - name: List environment
+      id: list_env
+      shell: bash
+      run: |
+        echo "node@$(node -v)"
+        echo "npm@$(npm -v)"
+        npm -s ls ||:
+        (npm -s ls --depth=0 ||:) | awk -F'[ @]' 'NR>1 && $2 { print "::set-output name=" $2 "::" $3 }'
+
+    - name: Run tests
+      shell: bash
+      run: |
+        if npm -ps ls nyc | grep -q nyc; then
+          npm run test-ci
+        else
+          npm test
+        fi
+
+    - name: Upload code coverage
+      if: steps.list_env.outputs.nyc != ''
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: coverage-node-${{ matrix.node-version }}
+        path: ./coverage/lcov.info
+        retention-days: 1
+
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    - name: Install lcov
+      shell: bash
+      run: sudo apt-get -y install lcov
+
+    - name: Collect coverage reports
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      with:
+        path: ./coverage
+        pattern: coverage-node-*
+
+    - name: Merge coverage reports
+      shell: bash
+      run: find ./coverage -name lcov.info -exec printf '-a %q\n' {} \; | xargs lcov -o ./lcov.info
+
+    - name: Upload coverage report
+      uses: coverallsapp/github-action@648a8eb78e6d50909eff900e4ec85cab4524a45b # v2.3.6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./lcov.info

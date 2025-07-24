@@ -1,15 +1,12 @@
 name: ci
+
 on:
   push:
     branches:
       - v3
-    paths-ignore:
-      - '*.md'
   pull_request:
     branches:
       - v3
-    paths-ignore:
-      - '*.md'
 
 permissions:
   contents: read
