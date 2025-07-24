@@ -32,6 +32,9 @@ jobs:
       - name: Lint code
         run: npm run lint
 
+      - name: Check types
+        run: npm run test-types
+
   test:
     name: Test - Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-latest

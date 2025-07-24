@@ -2,6 +2,7 @@ unreleased
 ==================
 
   * Breaking Change: Node.js 18 is the minimum supported version
+  * Add types
 
 2.4.1 / 2022-02-22
 ==================

@@ -8,7 +8,13 @@
   ],
   "license": "MIT",
   "repository": "jshttp/on-finished",
+  "type": "commonjs",
+  "main": "index.js",
+  "types": "index.d.ts",
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.2",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/node": "^18.19.120",
     "eslint": "^8.57.1",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.31.0",
@@ -16,8 +22,10 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-standard": "^4.1.0",
+    "expect-type": "^1.2.1",
     "mocha": "^11.7.0",
-    "nyc": "^17.1.0"
+    "nyc": "^17.1.0",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=18"
@@ -25,12 +33,14 @@
   "files": [
     "HISTORY.md",
     "LICENSE",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "scripts": {
     "lint": "eslint .",
     "test": "mocha --reporter spec --check-leaks test/",
     "test-ci": "nyc --reporter=lcovonly --reporter=text npm test",
-    "test-cov": "nyc --reporter=html --reporter=text npm test"
+    "test-cov": "nyc --reporter=html --reporter=text npm test",
+    "test-types": "tsc --noEmit && attw --pack"
   }
 }
