@@ -44,18 +44,18 @@ jobs:
 
         - name: Node.js 12.x
           node-version: "12"
-          npm-i: nyc@15.1.0
+          npm-i: mocha@8.4.0 nyc@15.1.0
 
         - name: Node.js 13.x
           node-version: "13"
-          npm-i: nyc@15.1.0
+          npm-i: mocha@8.4.0 nyc@15.1.0
 
         - name: Node.js 14.x
           node-version: "14"
 
         - name: Node.js 15.x
           node-version: "15"
-          npm-i: nyc@15.1.0
+          npm-i: mocha@8.4.0 nyc@15.1.0
 
         - name: Node.js 16.x
           node-version: "16"
