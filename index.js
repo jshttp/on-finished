@@ -20,7 +20,7 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-const asyncHooks = require('node:async_hooks')
+const { AsyncResource } = require('node:async_hooks')
 const stream = require('node:stream')
 
 /**
@@ -40,7 +40,10 @@ function onFinished (msg, listener) {
   }
 
   // attach the listener to the message
-  attachListener(msg, wrap(listener))
+  attachListener(
+    msg,
+    AsyncResource.bind(listener, listener.name || 'bound-anonymous-fn', null)
+  )
 
   return msg
 }
@@ -185,18 +188,4 @@ function createListener (msg) {
   listener.queue = []
 
   return listener
-}
-
-/**
- * Wrap function with async resource, if possible.
- * AsyncResource.bind static method backported.
- * @private
- */
-
-function wrap (fn) {
-  // create anonymous resource
-  const res = new asyncHooks.AsyncResource(fn.name || 'bound-anonymous-fn')
-
-  // return bound function
-  return res.runInAsyncScope.bind(res, fn, null)
 }
