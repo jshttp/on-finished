@@ -244,5 +244,5 @@ function wrap (fn) {
  * @private
  */
 function writableEnded (res) {
-  return typeof res.writableEnded !== 'boolean' ? res.finished : res.writableEnded
+  return typeof res.writableEnded === 'boolean' ? res.writableEnded : res.finished
 }
