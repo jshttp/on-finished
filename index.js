@@ -34,6 +34,10 @@ const stream = require('stream')
  */
 
 function onFinished (msg, listener) {
+  if (typeof listener !== 'function') {
+    throw new TypeError('listener must be a function')
+  }
+
   if (isFinished(msg) !== false) {
     setImmediate(listener, null, msg)
     return msg
