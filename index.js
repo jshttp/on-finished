@@ -20,8 +20,8 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-const asyncHooks = require('node:async_hooks')
-const stream = require('node:stream')
+const asyncHooks = require('async_hooks')
+const stream = require('stream')
 
 /**
  * Invoke callback when the response has finished, useful for
