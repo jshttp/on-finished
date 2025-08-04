@@ -20,8 +20,8 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-const asyncHooks = require('node:async_hooks')
-const stream = require('node:stream')
+const asyncHooks = require('async_hooks')
+const stream = require('stream')
 
 /** Symbol to store the listener on the message.
  * @private
@@ -39,6 +39,10 @@ const kOnFinished = Symbol('onFinished')
  */
 
 function onFinished (msg, listener) {
+  if (typeof listener !== 'function') {
+    throw new TypeError('listener must be a function')
+  }
+
   if (isFinished(msg) !== false) {
     setImmediate(listener, null, msg)
     return msg

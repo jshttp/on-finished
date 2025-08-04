@@ -1,12 +1,16 @@
-const assert = require('node:assert')
-const { AsyncLocalStorage } = require('node:async_hooks')
-const http = require('node:http')
-const net = require('node:net')
+const assert = require('assert')
+const { AsyncLocalStorage } = require('async_hooks')
+const http = require('http')
+const net = require('net')
 const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
   it('should invoke listener given an unknown object', function (done) {
     onFinished({}, done)
+  })
+
+  it('should throw TypeError if listener is not a function', function () {
+    assert.throws(() => { onFinished({}, 'not a function') }, /listener must be a function/)
   })
 
   describe('when the response finishes', function () {
@@ -402,6 +406,10 @@ describe('isFinished(res)', function () {
 })
 
 describe('onFinished(req, listener)', function () {
+  it('should throw TypeError if listener is not a function', function () {
+    assert.throws(() => { onFinished({}, 'not a function') }, /listener must be a function/)
+  })
+
   describe('when the request finishes', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
@@ -1122,7 +1130,7 @@ function captureStderr (fn) {
   var write = process.stderr.write
 
   process.stderr.write = function write (chunk, encoding) {
-    chunks.push(new Buffer(chunk, encoding)) // eslint-disable-line node/no-deprecated-api
+    chunks.push(Buffer.from(chunk, encoding))
   }
 
   try {
