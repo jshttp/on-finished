@@ -68,9 +68,9 @@ function onFinished (msg, listener) {
 function isFinished (msg) {
   var socket = msg.socket
 
-  if (typeof msg.finished === 'boolean') {
+  if (typeof msg.writableEnded === 'boolean') {
     // OutgoingMessage
-    return Boolean(msg.finished || (socket && !socket.writable))
+    return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
   if (typeof msg.complete === 'boolean') {
