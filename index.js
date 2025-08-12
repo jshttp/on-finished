@@ -20,8 +20,8 @@ module.exports.isFinished = isFinished
  * @private
  */
 
-const { AsyncResource } = require('async_hooks')
-const stream = require('stream')
+const { AsyncResource } = require('node:async_hooks')
+const stream = require('node:stream')
 
 /** Symbol to store the listener on the message.
  * @private
