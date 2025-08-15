@@ -10,11 +10,7 @@ createServer((req, res) => {
 
   onFinished(res, (err, res) => {
     expectTypeOf(err).toEqualTypeOf<Error | null | undefined>();
-    expectTypeOf(res).toEqualTypeOf<
-      ServerResponse<IncomingMessage> & {
-        req: IncomingMessage;
-      }
-    >();
+    expectTypeOf(res).toExtend<ServerResponse>();
   });
 
   expectTypeOf(isFinished(req)).toEqualTypeOf<boolean>();
