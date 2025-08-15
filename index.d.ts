@@ -4,7 +4,7 @@ import { IncomingMessage, ServerResponse } from "node:http";
 
 declare function onFinished<T extends IncomingMessage | ServerResponse>(
   msg: T,
-  listener: (err: Error | null | undefiend, msg: T) => void
+  listener: (err: Error | null | undefined, msg: T) => void
 ): T;
 
 declare namespace onFinished {
