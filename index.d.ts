@@ -8,7 +8,7 @@ declare function onFinished<T extends IncomingMessage | ServerResponse>(
 ): T;
 
 declare namespace onFinished {
-  function isFinished(msg: IncomingMessage | ServerResponse): boolean;
+  function isFinished(msg: IncomingMessage | ServerResponse): boolean | undefined;
 }
 
 export = onFinished;
