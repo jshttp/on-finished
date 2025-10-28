@@ -13,6 +13,6 @@ createServer((req, res) => {
     expectTypeOf(res).toExtend<ServerResponse>();
   });
 
-  expectTypeOf(isFinished(req)).toEqualTypeOf<boolean>();
+  expectTypeOf(isFinished(req)).toEqualTypeOf<boolean | undefined>();
   expectTypeOf(isFinished(res)).toEqualTypeOf<boolean>();
 });
