@@ -14,5 +14,5 @@ createServer((req, res) => {
   });
 
   expectTypeOf(isFinished(req)).toEqualTypeOf<boolean | undefined>();
-  expectTypeOf(isFinished(res)).toEqualTypeOf<boolean>();
+  expectTypeOf(isFinished(res)).toEqualTypeOf<boolean | undefined>();
 });
