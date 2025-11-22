@@ -3,8 +3,10 @@ const { AsyncLocalStorage } = require('async_hooks')
 const http = require('http2')
 const net = require('net')
 const onFinished = require('..')
+const { sendGetHTTP2: sendGet, noop, close, captureStderr } = require('./support/utils')
 
-describe.only('http2 onFinished(res, listener)', function () {
+
+describe('http2 onFinished(res, listener)', function () {
   describe('when the response finishes', function () {
     it('should fire the callback', function (done) {
       var server = http.createServer(function (req, res) {
@@ -252,7 +254,7 @@ describe.only('http2 onFinished(res, listener)', function () {
   })
 })
 
-describe.only('http2 isFinished(res)', function () {
+describe('http2 isFinished(res)', function () {
   it('should return undefined for unknown object', function () {
     assert.strictEqual(onFinished.isFinished({}), undefined)
   })
@@ -400,7 +402,7 @@ describe.only('http2 isFinished(res)', function () {
   })
 })
 
-describe.only('onFinished(req, listener)', function () {
+describe('onFinished(req, listener)', function () {
   it('should throw TypeError if listener is not a function', function () {
     assert.throws(() => { onFinished({}, 'not a function') }, /listener must be a function/)
   })
@@ -846,7 +848,8 @@ describe.only('onFinished(req, listener)', function () {
 //   })
 })
 
-describe.only('isFinished(req)', function () {
+
+describe('isFinished(req)', function () {
   it('should return undefined for unknown object', function () {
     assert.strictEqual(onFinished.isFinished({}), undefined)
   })
@@ -1122,42 +1125,6 @@ describe.only('isFinished(req)', function () {
 //     })
 //   })
 })
-
-function captureStderr (fn) {
-  var chunks = []
-  var write = process.stderr.write
-
-  process.stderr.write = function write (chunk, encoding) {
-    chunks.push(Buffer.from(chunk, encoding))
-  }
-
-  try {
-    fn()
-  } finally {
-    process.stderr.write = write
-  }
-
-  return Buffer.concat(chunks).toString('utf8')
-}
-
-function close (server, callback) {
-  return function (error) {
-    server.close(function (err) {
-      callback(error || err)
-    })
-  }
-}
-
-function noop () {}
-
-function sendGet (server) {
-  server.listen(function onListening () {
-    var port = this.address().port
-    const client = http.connect('http://127.0.0.1:' + port)
-    client.request({ ':path': '/' })
-    
-  })
-}
 
 function writeRequest (socketOrSession, chunked) {
   // fallback: raw http/1.1 over net.Socket

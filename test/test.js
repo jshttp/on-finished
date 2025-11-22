@@ -2,6 +2,7 @@ const assert = require('node:assert')
 const { AsyncLocalStorage } = require('node:async_hooks')
 const http = require('node:http')
 const net = require('node:net')
+const { sendGetHTTP1: sendGet, noop, close, captureStderr } = require('./support/utils')
 const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
@@ -1124,43 +1125,6 @@ describe('isFinished(req)', function () {
     })
   })
 })
-
-function captureStderr (fn) {
-  var chunks = []
-  var write = process.stderr.write
-
-  process.stderr.write = function write (chunk, encoding) {
-    chunks.push(Buffer.from(chunk, encoding))
-  }
-
-  try {
-    fn()
-  } finally {
-    process.stderr.write = write
-  }
-
-  return Buffer.concat(chunks).toString('utf8')
-}
-
-function close (server, callback) {
-  return function (error) {
-    server.close(function (err) {
-      callback(error || err)
-    })
-  }
-}
-
-function noop () {}
-
-function sendGet (server) {
-  server.listen(function onListening () {
-    var port = this.address().port
-    http.get('http://127.0.0.1:' + port, function onResponse (res) {
-      res.resume()
-      res.on('end', server.close.bind(server))
-    })
-  })
-}
 
 function writeRequest (socket, chunked) {
   socket.write('GET / HTTP/1.1\r\n')
