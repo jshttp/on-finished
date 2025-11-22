@@ -442,50 +442,51 @@ describe.only('onFinished(req, listener)', function () {
 
         sendGet(server)
       })
+        })
 
-//       describe('when async local storage', function () {
-//         it('should presist store in callback', function (done) {
-//           var asyncLocalStorage = new AsyncLocalStorage()
-//           var store = { foo: 'bar' }
+      describe('when async local storage', function () {
+        it('should presist store in callback', function (done) {
+          var asyncLocalStorage = new AsyncLocalStorage()
+          var store = { foo: 'bar' }
 
-//           var server = http.createServer(function (req, res) {
-//             onFinished(req, function () {
-//               asyncLocalStorage.run(store, function () {
-//                 onFinished(req, function () {
-//                   assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
-//                   done()
-//                 })
-//               })
-//             })
-//             req.resume()
-//             setTimeout(res.end.bind(res), 0)
-//           })
+          var server = http.createServer(function (req, res) {
+            onFinished(req, function () {
+              asyncLocalStorage.run(store, function () {
+                onFinished(req, function () {
+                  assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+                  done()
+                })
+              })
+            })
+            req.resume()
+            setTimeout(res.end.bind(res), 0)
+          })
 
-//           sendGet(server)
-//         })
+          sendGet(server)
+        })
+
       })
     })
 
-//     describe('when async local storage', function () {
-//       it('should presist store in callback', function (done) {
-//         var asyncLocalStorage = new AsyncLocalStorage()
-//         var store = { foo: 'bar' }
+    describe('when async local storage', function () {
+      it('should presist store in callback', function (done) {
+        var asyncLocalStorage = new AsyncLocalStorage()
+        var store = { foo: 'bar' }
 
-//         var server = http.createServer(function (req, res) {
-//           asyncLocalStorage.run(store, function () {
-//             onFinished(req, function () {
-//               assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
-//               done()
-//             })
-//           })
-//           req.resume()
-//           setTimeout(res.end.bind(res), 0)
-//         })
+        var server = http.createServer(function (req, res) {
+          asyncLocalStorage.run(store, function () {
+            onFinished(req, function () {
+              assert.strictEqual(asyncLocalStorage.getStore().foo, 'bar')
+              done()
+            })
+          })
+          req.resume()
+          setTimeout(res.end.bind(res), 0)
+        })
 
-//         sendGet(server)
-//       })
-//     })
-//   })
+        sendGet(server)
+      })
+    })
 
 //   describe('when using keep-alive', function () {
 //     it('should fire for each request', function (done) {
@@ -845,7 +846,7 @@ describe.only('onFinished(req, listener)', function () {
 //   })
 })
 
-describe('isFinished(req)', function () {
+describe.only('isFinished(req)', function () {
   it('should return undefined for unknown object', function () {
     assert.strictEqual(onFinished.isFinished({}), undefined)
   })
@@ -861,20 +862,21 @@ describe('isFinished(req)', function () {
     sendGet(server)
   })
 
-//   it('should be true after request finishes', function (done) {
-//     var server = http.createServer(function (req, res) {
-//       onFinished(req, function (err) {
-//         assert.ifError(err)
-//         assert.ok(onFinished.isFinished(req))
-//         done()
-//       })
+  it.skip('should be true after request finishes', function (done) {
+    var server = http.createServer(function (req, res) {
+      onFinished(req, function (err) {
+        assert.ifError(err)
+        assert.ok(onFinished.isFinished(req))
+        done()
+      })
 
-//       req.resume()
-//       res.end()
-//     })
+      // WHY?
+      req.resume()
+      res.end()
+    })
 
-//     sendGet(server)
-//   })
+    sendGet(server)
+  })
 
 //   describe('when request data buffered', function () {
 //     it('should be false before request finishes', function (done) {
@@ -916,24 +918,25 @@ describe('isFinished(req)', function () {
 //     })
 //   })
 
-//   describe('when the request aborts', function () {
-//     it('should return true', function (done) {
-//       var client
-//       var server = http.createServer(function (req, res) {
-//         onFinished(res, function (err) {
-//           assert.ifError(err)
-//           assert.ok(onFinished.isFinished(req))
-//           server.close(done)
-//         })
-//         setTimeout(client.abort.bind(client), 0)
-//       })
-//       server.listen(function () {
-//         var port = this.address().port
-//         client = http.get('http://127.0.0.1:' + port)
-//         client.on('error', noop)
-//       })
-//     })
-//   })
+  describe('when the request aborts', function () {
+    it('should return true', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.ok(onFinished.isFinished(req))
+          server.close(done)
+        })
+        setTimeout(client.destroy.bind(client), 0)
+      })
+      server.listen(function () {
+        var port = this.address().port
+        client = http.connect('http://127.0.0.1:' + port)
+        client.request({ ':path': '/' })
+        client.on('error', noop)
+      })
+    })
+  })
 
 //   describe('when CONNECT method', function () {
 //     it('should be true immediately', function (done) {
