@@ -388,59 +388,60 @@ describe.only('http2 isFinished(res)', function () {
           assert.ok(onFinished.isFinished(res))
           server.close(done)
         })
-        setTimeout(client.abort.bind(client), 0)
+        setTimeout(client.destroy.bind(client), 0)
       })
       server.listen(function () {
         var port = this.address().port
-        client = http.get('http://127.0.0.1:' + port)
+        client = http.connect('http://127.0.0.1:' + port)
+        client.request({ ':path': '/' })
         client.on('error', noop)
       })
     })
   })
-// })
+})
 
-// describe('onFinished(req, listener)', function () {
-//   it('should throw TypeError if listener is not a function', function () {
-//     assert.throws(() => { onFinished({}, 'not a function') }, /listener must be a function/)
-//   })
+describe.only('onFinished(req, listener)', function () {
+  it('should throw TypeError if listener is not a function', function () {
+    assert.throws(() => { onFinished({}, 'not a function') }, /listener must be a function/)
+  })
 
-//   describe('when the request finishes', function () {
-//     it('should fire the callback', function (done) {
-//       var server = http.createServer(function (req, res) {
-//         onFinished(req, done)
-//         req.resume()
-//         setTimeout(res.end.bind(res), 0)
-//       })
+  describe('when the request finishes', function () {
+    it('should fire the callback', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, done)
+        req.resume()
+        setTimeout(res.end.bind(res), 0)
+      })
 
-//       sendGet(server)
-//     })
+      sendGet(server)
+    })
 
-//     it('should include the request object', function (done) {
-//       var server = http.createServer(function (req, res) {
-//         onFinished(req, function (err, msg) {
-//           assert.ok(!err)
-//           assert.strictEqual(msg, req)
-//           done()
-//         })
-//         req.resume()
-//         setTimeout(res.end.bind(res), 0)
-//       })
+    it('should include the request object', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (err, msg) {
+          assert.ok(!err)
+          assert.strictEqual(msg, req)
+          done()
+        })
+        req.resume()
+        setTimeout(res.end.bind(res), 0)
+      })
 
-//       sendGet(server)
-//     })
+      sendGet(server)
+    })
 
-//     describe('when called after finish', function () {
-//       it('should fire when called after finish', function (done) {
-//         var server = http.createServer(function (req, res) {
-//           onFinished(req, function () {
-//             onFinished(req, done)
-//           })
-//           req.resume()
-//           setTimeout(res.end.bind(res), 0)
-//         })
+    describe('when called after finish', function () {
+      it('should fire when called after finish', function (done) {
+        var server = http.createServer(function (req, res) {
+          onFinished(req, function () {
+            onFinished(req, done)
+          })
+          req.resume()
+          setTimeout(res.end.bind(res), 0)
+        })
 
-//         sendGet(server)
-//       })
+        sendGet(server)
+      })
 
 //       describe('when async local storage', function () {
 //         it('should presist store in callback', function (done) {
@@ -462,8 +463,8 @@ describe.only('http2 isFinished(res)', function () {
 
 //           sendGet(server)
 //         })
-//       })
-//     })
+      })
+    })
 
 //     describe('when async local storage', function () {
 //       it('should presist store in callback', function (done) {
