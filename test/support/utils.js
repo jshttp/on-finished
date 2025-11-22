@@ -6,6 +6,7 @@ exports.sendGetHTTP2 = sendGetHTTP2
 exports.close = close
 exports.noop = noop
 exports.captureStderr = captureStderr
+exports.getTestHelpers = getTestHelpers
 
 function sendGetHTTP1 (server) {
   server.listen(function onListening () {
@@ -21,8 +22,21 @@ function sendGetHTTP2 (server) {
   server.listen(function onListening () {
     var port = this.address().port
     const client = http2.connect('http://127.0.0.1:' + port)
-    client.request({ ':path': '/' })    
+    client.request({ ':path': '/' })
   })
+}
+
+function sendGetHTTP1Error (port) {
+  const client = http1.get('http://127.0.0.1:' + port)
+  client.on('error', noop)
+  return client
+}
+
+function sendGetHTTP2Error (port) {
+  const client = http2.connect('http://127.0.0.1:' + port)
+  client.request({ ':path': '/' })
+  client.on('error', noop)
+  return client
 }
 
 function close (server, callback) {
@@ -33,7 +47,7 @@ function close (server, callback) {
   }
 }
 
-function noop () {}
+function noop () { }
 
 function captureStderr (fn) {
   var chunks = []
@@ -50,4 +64,12 @@ function captureStderr (fn) {
   }
 
   return Buffer.concat(chunks).toString('utf8')
+}
+
+function getTestHelpers (type) {
+  return {
+    http: type === 'http2' ? http2 : http1,
+    sendGet: type === 'http2' ? sendGetHTTP2 : sendGetHTTP1,
+    sendGetError: type === 'http2' ? sendGetHTTP2Error : sendGetHTTP1Error
+  }
 }
