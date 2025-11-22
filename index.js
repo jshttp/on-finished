@@ -66,7 +66,14 @@ function onFinished (msg, listener) {
  */
 
 function isFinished (msg) {
-  var socket = msg.socket
+  const socket = msg.socket
+  const stream = msg.stream
+
+  if (stream && typeof stream.closed === 'boolean') {
+    // Http2ServerRequest
+    // Http2ServerResponse
+    return stream.closed
+  }
 
   if (typeof msg.writableEnded === 'boolean') {
     // OutgoingMessage
