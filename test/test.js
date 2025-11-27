@@ -260,8 +260,20 @@ describe('onFinished(res, listener)', function () {
 })
 
 describe('isFinished(res)', function () {
-  it('should return undefined for unknown object', function () {
-    assert.strictEqual(onFinished.isFinished({}), undefined)
+  describe('when response is invalid', function () {
+    it('should throw TypeError for null and undefined', function () {
+      [null, undefined].forEach(function (value) {
+        assert.throws(function () {
+          onFinished.isFinished(value)
+        }, TypeError)
+      })
+    })
+
+    it('should return undefined for unknown object, number, string, and boolean', function () {
+      [{}, 123, 'string', true, false].forEach(function (value) {
+        assert.strictEqual(onFinished.isFinished(value), undefined)
+      })
+    })
   })
 
   it('should be false before response finishes', function (done) {
