@@ -47,63 +47,71 @@ describe('http2 onFinished(res, listener)', function () {
     })
   })
 
-  //   describe('when requests pipelined', function () {
-  //     it('should fire for each request', function (done) {
-  //       var count = 0
-  //       var responses = []
-  //       var server = http.createServer(function (req, res) {
-  //         responses.push(res)
+  describe('when requests pipelined', function () {
+    it('should fire for each request', function (done) {
+      var count = 0
+      var responses = []
+      var server = http.createServer(function (req, res) {
+        responses.push(res)
 
-  //         onFinished(res, function (err) {
-  //           assert.ifError(err)
-  //           assert.strictEqual(responses[0], res)
-  //           responses.shift()
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.strictEqual(responses[0], res)
+          responses.shift()
 
-  //           if (responses.length === 0) {
-  //             socket.end()
-  //             return
-  //           }
+          if (responses.length === 0) {
+            // close the client session from the server side
+            if (session) session.close()
+            return
+          }
 
-  //           responses[0].end('response b')
-  //         })
+          responses[0].end('response b')
+        })
 
-  //         onFinished(req, function (err) {
-  //           assert.ifError(err)
+        onFinished(req, function (err) {
+          assert.ifError(err)
 
-  //           if (++count !== 2) {
-  //             return
-  //           }
+          if (++count !== 2) {
+            return
+          }
 
-  //           assert.strictEqual(responses.length, 2)
-  //           responses[0].end('response a')
-  //         })
+          assert.strictEqual(responses.length, 2)
+          responses[0].end('response a')
+        })
 
-  //         if (responses.length === 1) {
-  //           // second request
-  //           writeRequest(socket)
-  //         }
+        req.resume()
+      })
+      var session
 
-  //         req.resume()
-  //       })
-  //       var socket
+      server.listen(function () {
+        var port = this.address().port
+        var data = ''
+        session = http.connect('http://127.0.0.1:' + port)
 
-  //       server.listen(function () {
-  //         var data = ''
-  //         socket = net.connect(this.address().port, function () {
-  //           writeRequest(this)
-  //         })
+        // send two concurrent requests over the same HTTP/2 session
+        var r1 = session.request({ ':path': '/' })
+        var r2 = session.request({ ':path': '/' })
 
-  //         socket.on('data', function (chunk) {
-  //           data += chunk.toString('binary')
-  //         })
-  //         socket.on('end', function () {
-  //           assert.ok(/response a/.test(data))
-  //           assert.ok(/response b/.test(data))
-  //           server.close(done)
-  //         })
-  //       })
-  //     })
-  //   })
+        r1.on('data', function (chunk) { data += chunk.toString() })
+        r2.on('data', function (chunk) { data += chunk.toString() })
+
+        var ended = 0
+        function onend () {
+          if (++ended === 2) {
+            assert.ok(/response a/.test(data))
+            assert.ok(/response b/.test(data))
+            server.close(done)
+          }
+        }
+
+        r1.on('end', onend)
+        r2.on('end', onend)
+
+        r1.resume()
+        r2.resume()
+      })
+    })
+  })
 
   //   describe('when response errors', function () {
   //     it('should fire with error', function (done) {
