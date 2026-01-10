@@ -270,27 +270,31 @@ describe('http2 isFinished(res)', function () {
     })
   })
 
-  //   describe('when response errors', function () {
-  //     it('should return true', function (done) {
-  //       var server = http.createServer(function (req, res) {
-  //         onFinished(res, function (err) {
-  //           assert.ok(err)
-  //           assert.ok(onFinished.isFinished(res))
-  //           server.close(done)
-  //         })
+  describe.skip('when response errors', function () {
+    it('should return true', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function (_err) {
+          assert.ok(onFinished.isFinished(res))
+          server.close(done)
+        })
+      })
 
-  //         socket.on('error', noop)
-  //         socket.write('W')
-  //       })
-  //       var socket
+      server.listen(function () {
+        var port = this.address().port
+        var client = http.connect('http://127.0.0.1:' + port)
+        client.on('error', noop)
+        client.on('close', noop)
 
-//       server.listen(function () {
-//         socket = net.connect(this.address().port, function () {
-//           writeRequest(this, true)
-//         })
-//       })
-//     })
-//   })
+        var req = client.request({ ':path': '/' })
+        req.on('response', function () {})
+        req.end()
+
+        setImmediate(function () {
+          client.destroy(new Error('abort'))
+        })
+      })
+    })
+  })
 })
 
 describe('onFinished(req, listener)', function () {
