@@ -5,34 +5,47 @@ const onFinished = require('..')
 const { sendGetHTTP2: sendGet, noop, captureStderr } = require('./support/utils')
 
 describe('http2 onFinished(res, listener)', function () {
-  // describe('when using keep-alive', function () {
-  //   it('should fire for each response', function (done) {
-  //     var called = false
-  //     var server = http.createServer(function (req, res) {
-  //       onFinished(res, function () {
-  //         if (called) {
-  //           socket.end()
-  //           server.close()
-  //           done(called !== req ? null : new Error('fired twice on same req'))
-  //           return
-  //         }
+  describe('when reusing an HTTP/2 session', function () {
+    it('should fire for each response on the same HTTP/2 session', function (done) {
+      var called = false
+      var server = http.createServer(function (req, res) {
+        onFinished(res, function () {
+          if (called) {
+            // second response, make sure it's a different request object
+            session.close()
+            server.close()
+            done(called !== req ? null : new Error('fired twice on same req'))
+            return
+          }
 
-  //         called = req
+          called = req
+        })
 
-  //         writeRequest(socket)
-  //       })
+        res.end()
+      })
 
-  //       res.end()
-  //     })
-  //     var socket
+      var session
 
-  //     server.listen(function () {
-  //       socket = net.connect(this.address().port, function () {
-  //         writeRequest(this)
-  //       })
-  //     })
-  //   })
-  // })
+      server.listen(function () {
+        var port = this.address().port
+        session = http.connect('http://127.0.0.1:' + port)
+
+        // first request
+        var s1 = session.request({ ':path': '/' })
+        s1.on('response', function () {})
+        s1.on('end', function () {
+          // second request re-using the same HTTP/2 session
+          var s2 = session.request({ ':path': '/' })
+          s2.on('response', function () {})
+          s2.on('end', function () {
+            // wait for server to call done from its second onFinished
+          })
+          s2.resume()
+        })
+        s1.resume()
+      })
+    })
+  })
 
   //   describe('when requests pipelined', function () {
   //     it('should fire for each request', function (done) {
