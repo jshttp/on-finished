@@ -298,46 +298,46 @@ describe('http2 isFinished(res)', function () {
 })
 
 describe('onFinished(req, listener)', function () {
-//   describe('when using keep-alive', function () {
-//     it('should fire for each request', function (done) {
-//       var called = false
-//       var server = http.createServer(function (req, res) {
-//         var data = ''
+  describe('when reusing an HTTP/2 session', function () {
+    it('should fire for each request', function (done) {
+      var called = false
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function () {
+          if (called) {
+            session.close()
+            server.close()
+            done(called !== req ? null : new Error('fired twice on same req'))
+            return
+          }
 
-  //         onFinished(req, function (err) {
-  //           assert.ifError(err)
-  //           assert.strictEqual(data, 'A')
+          called = req
+        })
 
-  //           if (called) {
-  //             socket.end()
-  //             server.close()
-  //             done(called !== req ? null : new Error('fired twice on same req'))
-  //             return
-  //           }
+        res.end()
+      })
 
-  //           called = req
+      var session
 
-  //           res.end()
-  //           writeRequest(socket, true)
-  //         })
+      server.listen(function () {
+        var port = this.address().port
+        session = http.connect('http://127.0.0.1:' + port)
 
-  //         req.setEncoding('utf8')
-  //         req.on('data', function (str) {
-  //           data += str
-  //         })
-
-  //         socket.write('1\r\nA\r\n')
-  //         socket.write('0\r\n\r\n')
-  //       })
-  //       var socket
-
-  //       server.listen(function () {
-  //         socket = net.connect(this.address().port, function () {
-  //           writeRequest(this, true)
-  //         })
-  //       })
-  //     })
-  //   })
+        // first request
+        var s1 = session.request({ ':path': '/' })
+        s1.on('response', function () {})
+        s1.on('end', function () {
+          // second request re-using the same HTTP/2 session
+          var s2 = session.request({ ':path': '/' })
+          s2.on('response', function () {})
+          s2.on('end', function () {
+            // wait for server to call done from its second onFinished
+          })
+          s2.end()
+        })
+        s1.end()
+      })
+    })
+  })
 
   //   describe('when request errors', function () {
   //     it('should fire with error', function (done) {
