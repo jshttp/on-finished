@@ -112,7 +112,7 @@ describe('http2 onFinished(res, listener)', function () {
     })
   })
 
-  describe.skip('when response errors', function () {
+  describe('when response errors', function () {
     it('should fire with error', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (_err) {
@@ -133,7 +133,7 @@ describe('http2 onFinished(res, listener)', function () {
 
         // destroy the client session to simulate a network error
         setImmediate(function () {
-          client.destroy(new Error('abort'))
+          client.destroy()
         })
       })
     })
@@ -157,7 +157,7 @@ describe('http2 onFinished(res, listener)', function () {
         req.end()
 
         setImmediate(function () {
-          client.destroy(new Error('abort'))
+          client.destroy()
         })
       })
     })
@@ -233,8 +233,7 @@ describe('http2 isFinished(res)', function () {
       })
     })
 
-    // Why?
-    it.skip('should handle aborted requests', function (done) {
+    it('should handle aborted requests', function (done) {
       var count = 0
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err) {
@@ -242,7 +241,7 @@ describe('http2 isFinished(res)', function () {
             case 1:
               assert.ifError(err)
               // abort the client session to simulate a network error
-              if (clientSession) clientSession.destroy(new Error('abort'))
+              if (clientSession) clientSession.destroy()
               break
             case 2:
               server.close(done)
@@ -270,7 +269,7 @@ describe('http2 isFinished(res)', function () {
     })
   })
 
-  describe.skip('when response errors', function () {
+  describe('when response errors', function () {
     it('should return true', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (_err) {
@@ -290,7 +289,7 @@ describe('http2 isFinished(res)', function () {
         req.end()
 
         setImmediate(function () {
-          client.destroy(new Error('abort'))
+          client.destroy()
         })
       })
     })
