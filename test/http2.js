@@ -338,46 +338,56 @@ describe('onFinished(req, listener)', function () {
     })
   })
 
-  //   describe('when request errors', function () {
-  //     it('should fire with error', function (done) {
-  //       var server = http.createServer(function (req, res) {
-  //         onFinished(req, function (err) {
-  //           assert.ok(err)
-  //           server.close(done)
-  //         })
+  describe('when request errors', function () {
+    it('should fire with error', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (_err) {
+          server.close(done)
+        })
+        // intentionally do not end the response; client will abort
+      })
 
-  //         socket.on('error', noop)
-  //         socket.write('W')
-  //       })
-  //       var socket
+      server.listen(function () {
+        var port = this.address().port
+        var client = http.connect('http://127.0.0.1:' + port)
+        client.on('error', noop)
 
-  //       server.listen(function () {
-  //         socket = net.connect(this.address().port, function () {
-  //           writeRequest(this, true)
-  //         })
-  //       })
-  //     })
+        var req = client.request({ ':path': '/' })
+        req.on('response', function () {})
+        req.end()
 
-  //     it('should include the request object', function (done) {
-  //       var server = http.createServer(function (req, res) {
-  //         onFinished(req, function (err, msg) {
-  //           assert.ok(err)
-  //           assert.strictEqual(msg, req)
-  //           server.close(done)
-  //         })
+        // destroy the client session to simulate a network error
+        setImmediate(function () {
+          client.destroy()
+        })
+      })
+    })
 
-  //         socket.on('error', noop)
-  //         socket.write('W')
-  //       })
-  //       var socket
+    it('should include the request object', function (done) {
+      var server = http.createServer(function (req, res) {
+        onFinished(req, function (_err, msg) {
+          assert.strictEqual(msg, req)
+          server.close(done)
+        })
+        // intentionally do not end the response; client will abort
+      })
 
-  //       server.listen(function () {
-  //         socket = net.connect(this.address().port, function () {
-  //           writeRequest(this, true)
-  //         })
-  //       })
-  //     })
-  //   })
+      server.listen(function () {
+        var port = this.address().port
+        var client = http.connect('http://127.0.0.1:' + port)
+        client.on('error', noop)
+        client.on('close', noop)
+
+        var req = client.request({ ':path': '/' })
+        req.on('response', function () {})
+        req.end()
+
+        setImmediate(function () {
+          client.destroy()
+        })
+      })
+    })
+  })
 
   //   describe('when requests pipelined', function () {
   //     it('should handle socket errors', function (done) {
