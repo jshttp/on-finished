@@ -21,6 +21,7 @@ module.exports.isFinished = isFinished
  */
 
 const { AsyncResource } = require('node:async_hooks')
+const http2 = require('node:http2')
 const stream = require('node:stream')
 
 /** Symbol to store the listener on the message.
@@ -76,6 +77,16 @@ function isFinished (msg) {
   if (typeof msg.complete === 'boolean') {
     // IncomingMessage
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
+  }
+
+  // HTTP/2 response
+  if (http2.Http2ServerResponse && msg instanceof http2.Http2ServerResponse) {
+    return Boolean(msg.stream.destroyed || msg.stream.closed)
+  }
+
+  // HTTP/2 stream
+  if (http2.Http2Stream && msg instanceof http2.Http2Stream) {
+    return Boolean(msg.destroyed || msg.closed)
   }
 
   // don't know
