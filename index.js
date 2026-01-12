@@ -67,19 +67,25 @@ function onFinished (msg, listener) {
 
 function isFinished (msg) {
   const socket = msg.socket
-  const stream = msg.stream
-  // HTTP/2 streams have destroyed property but no socket or stream properties
-  const isHttp2 = typeof msg.destroyed === 'boolean' && !socket && !stream
+  const isHttp2 = typeof msg.respond === 'function' && !socket
 
   // OutgoingMessage or Http2ServerResponse
   if (typeof msg.writableEnded === 'boolean') {
-    if (isHttp2) return Boolean(msg.destroyed || msg.writableEnded)
+    if (isHttp2) {
+      console.log('http2')
+      return Boolean(msg.destroyed || msg.writableEnded)
+    }
+    console.log('http1')
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
   // IncomingMessage or Http2ServerRequest
   if (typeof msg.complete === 'boolean') {
-    if (isHttp2) return Boolean(msg.destroyed || (msg.complete && !msg.readable))
+    if (isHttp2) {
+      console.log('http2')
+      return Boolean(msg.destroyed || (msg.complete && !msg.readable))
+    }
+    console.log('http1')
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
   }
 
