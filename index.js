@@ -71,21 +71,13 @@ function isFinished (msg) {
 
   // OutgoingMessage or Http2ServerResponse
   if (typeof msg.writableEnded === 'boolean') {
-    if (isHttp2) {
-      console.log('http2')
-      return Boolean(msg.destroyed || msg.writableEnded)
-    }
-    console.log('http1')
+    if (isHttp2) return Boolean(msg.destroyed || msg.writableEnded)
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
   // IncomingMessage or Http2ServerRequest
   if (typeof msg.complete === 'boolean') {
-    if (isHttp2) {
-      console.log('http2')
-      return Boolean(msg.destroyed || (msg.complete && !msg.readable))
-    }
-    console.log('http1')
+    if (isHttp2) return Boolean(msg.destroyed || (msg.complete && !msg.readable))
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
   }
 
