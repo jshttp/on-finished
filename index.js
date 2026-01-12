@@ -21,7 +21,6 @@ module.exports.isFinished = isFinished
  */
 
 const { AsyncResource } = require('node:async_hooks')
-const http2 = require('node:http2')
 const stream = require('node:stream')
 
 /** Symbol to store the listener on the message.
@@ -67,26 +66,21 @@ function onFinished (msg, listener) {
  */
 
 function isFinished (msg) {
-  var socket = msg.socket
+  const socket = msg.socket
+  const stream = msg.stream
+  // HTTP/2 streams have destroyed property but no socket or stream properties
+  const isHttp2 = typeof msg.destroyed === 'boolean' && !socket && !stream
 
+  // OutgoingMessage or Http2ServerResponse
   if (typeof msg.writableEnded === 'boolean') {
-    // OutgoingMessage
+    if (isHttp2) return Boolean(msg.destroyed || msg.writableEnded)
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
+  // IncomingMessage or Http2ServerRequest
   if (typeof msg.complete === 'boolean') {
-    // IncomingMessage
+    if (isHttp2) return Boolean(msg.destroyed || (msg.complete && !msg.readable))
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
-  }
-
-  // HTTP/2 response
-  if (http2.Http2ServerResponse && msg instanceof http2.Http2ServerResponse) {
-    return Boolean(msg.stream.destroyed || msg.stream.closed)
-  }
-
-  // HTTP/2 stream
-  if (http2.Http2Stream && msg instanceof http2.Http2Stream) {
-    return Boolean(msg.destroyed || msg.closed)
   }
 
   // don't know
