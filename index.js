@@ -66,15 +66,18 @@ function onFinished (msg, listener) {
  */
 
 function isFinished (msg) {
-  var socket = msg.socket
+  const socket = msg.socket
+  const isHttp2 = typeof msg.respond === 'function' && !socket
 
+  // OutgoingMessage or Http2ServerResponse
   if (typeof msg.writableEnded === 'boolean') {
-    // OutgoingMessage
+    if (isHttp2) return Boolean(msg.destroyed || msg.writableEnded)
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
+  // IncomingMessage or Http2ServerRequest
   if (typeof msg.complete === 'boolean') {
-    // IncomingMessage
+    if (isHttp2) return Boolean(msg.destroyed || (msg.complete && !msg.readable))
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
   }
 
