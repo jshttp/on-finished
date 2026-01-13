@@ -428,29 +428,31 @@ describe('onFinished(req, listener)', function () {
   //     })
   //   })
 
-  //   describe('when calling many times on same request', function () {
-  //     it('should not print warnings', function (done) {
-  //       var server = http.createServer(function (req, res) {
-  //         var stderr = captureStderr(function () {
-  //           for (var i = 0; i < 400; i++) {
-  //             onFinished(req, noop)
-  //           }
-  //         })
+  describe('when calling many times on same request', function () {
+    it('should not print warnings', function (done) {
+      var server = http.createServer(function (req, res) {
+        var stderr = captureStderr(function () {
+          for (var i = 0; i < 400; i++) {
+            onFinished(req, noop)
+          }
+        })
 
-  //         onFinished(req, done)
-  //         assert.strictEqual(stderr, '')
-  //         res.end()
-  //       })
+        onFinished(req, done)
+        assert.strictEqual(stderr, '')
+        res.end()
+      })
 
-  //       server.listen(function () {
-  //         var port = this.address().port
-  //         http.get('http://127.0.0.1:' + port, function (res) {
-  //           res.resume()
-  //           res.on('end', server.close.bind(server))
-  //         })
-  //       })
-  //     })
-  //   })
+      server.listen(function () {
+        var port = this.address().port
+        const client = http.connect('http://127.0.0.1:' + port)
+        var r = client.request({ ':path': '/' })
+        r.on('response', function () {})
+        r.on('end', server.close.bind(server))
+        r.end()
+        r.resume()
+      })
+    })
+  })
 
   //   describe('when CONNECT method', function () {
   //     it('should fire when request finishes', function (done) {
