@@ -651,7 +651,7 @@ describe('onFinished(req, listener)', function () {
 })
 
 describe('isFinished(req)', function () {
-  it.skip('should be true after request finishes', function (done) {
+  it('should be true after request finishes', function (done) {
     var server = http.createServer(function (req, res) {
       onFinished(req, function (err) {
         assert.ifError(err)

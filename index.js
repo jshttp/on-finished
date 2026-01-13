@@ -68,19 +68,23 @@ function onFinished (msg, listener) {
 function isFinished (msg) {
   const socket = msg.socket
   const stream = msg.stream
-
-  if (stream && typeof stream.closed === 'boolean') {
-    // Http2ServerRequest
-    // Http2ServerResponse
-    return stream.closed
-  }
+  const isHttp2 = stream && typeof stream.closed === 'boolean'
 
   if (typeof msg.writableEnded === 'boolean') {
+    // Http2ServerResponse
+    if (isHttp2) {
+      return stream.closed
+    }
     // OutgoingMessage
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
   if (typeof msg.complete === 'boolean') {
+    // Http2ServerRequest
+    if (isHttp2) {
+      return Boolean(stream.closed || (msg.complete && !msg.readable))
+    }
+
     // IncomingMessage
     return Boolean(msg.upgrade || !socket || !socket.readable || (msg.complete && !msg.readable))
   }
