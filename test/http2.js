@@ -633,49 +633,40 @@ describe('isFinished(req)', function () {
       })
     })
 
-    //     it('should be true after request finishes', function (done) {
-    //       var client
-    //       var server = http.createServer(function (req, res) {
-    //         res.statusCode = 405
-    //         res.end()
-    //       })
-    //       server.on('connect', function (req, socket, bodyHead) {
-    //         var data = [bodyHead]
+    it.only('should be true after request finishes', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
 
-    //         onFinished(req, function (err) {
-    //           assert.ifError(err)
-    //           assert.ok(onFinished.isFinished(req))
-    //           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
-    //           socket.write('HTTP/1.1 200 OK\r\n\r\n')
-    //         })
+      server.on('connect', function (req, socket) {
+        var data = []
 
-    //         socket.on('data', function (chunk) {
-    //           assert.strictEqual(chunk.toString(), 'ping')
-    //           socket.end('pong')
-    //         })
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.ok(onFinished.isFinished(req))
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
+          socket.end('pong')
+        })
 
-    //         req.on('data', function (chunk) {
-    //           data.push(chunk)
-    //         })
-    //       })
+        req.on('data', function (chunk) {
+          data.push(chunk)
+        })
+      })
 
-  //       server.listen(function () {
-  //         client = http.request({
-  //           hostname: '127.0.0.1',
-  //           method: 'CONNECT',
-  //           path: '127.0.0.1:80',
-  //           port: this.address().port
-  //         })
-  //         client.on('connect', function (res, socket, bodyHead) {
-  //           socket.write('ping')
-  //           socket.on('data', function (chunk) {
-  //             assert.strictEqual(chunk.toString(), 'pong')
-  //             socket.end()
-  //             server.close(done)
-  //           })
-  //         })
-  //         client.end('knock, knock')
-  //       })
-  //     })
+      server.listen(function () {
+        client = http.connect('http://127.0.0.1:' + server.address().port)
+
+        var response = client.request({ ':method': 'CONNECT', ':authority': 'localhost' })
+        response.on('data', function (chunk) {
+          assert.strictEqual(chunk.toString(), 'pong')
+          client.close()
+          server.close(done)
+        })
+
+        response.end('knock, knock')
+      })
+    })
   })
 })
