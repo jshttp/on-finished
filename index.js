@@ -70,6 +70,7 @@ function isFinished (msg) {
   const stream = msg.stream
   const isHttp2 = stream && typeof stream.closed === 'boolean'
 
+  // OutgoingMessage or Http2ServerResponse
   if (typeof msg.writableEnded === 'boolean') {
     // Http2ServerResponse
     if (isHttp2) {
@@ -79,6 +80,7 @@ function isFinished (msg) {
     return Boolean(msg.writableEnded || (socket && !socket.writable))
   }
 
+  // IncomingMessage or Http2ServerRequest
   if (typeof msg.complete === 'boolean') {
     // Http2ServerRequest
     if (isHttp2) {
