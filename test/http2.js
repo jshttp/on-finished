@@ -588,7 +588,7 @@ describe('http2 compatibility mode', function () {
         })
       })
 
-      it.only('should be true after request finishes', function (done) {
+      it('should be true after request finishes', function (done) {
         var client
         var server = http.createServer(function (req, res) {
           res.statusCode = 405
