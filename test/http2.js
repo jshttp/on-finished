@@ -391,44 +391,39 @@ describe('http2 compatibility mode', function () {
       })
     })
 
-    //   describe('when requests pipelined', function () {
-    //     it('should handle socket errors', function (done) {
-    //       var count = 0
-    //       var server = http2.createServer(function (req) {
-    //         var num = ++count
+    describe('when requests pipelined', function () {
+      it('should handle socket errors', function (done) {
+        var count = 0
+        var server = http2.createServer(function (req, res) {
+          onFinished(req, function (err) {
+            assert.ifError(err)
+            if (++count === 2) server.close(done)
+          })
 
-    //         onFinished(req, function (err) {
-    //           assert.ok(err)
-    //           if (!--wait) server.close(done)
-    //         })
+          // intentionally do not end the response; client will abort
+        })
 
-    //         if (num === 1) {
-    //           // second request
-    //           writeRequest(socket, true)
-    //           req.pause()
-    //         } else {
-    //           // cause framing error in second request
-    //           socket.write('W')
-    //           req.resume()
-    //         }
-    //       })
-    //       var socket
-    //       var wait = 3
+        server.listen(function () {
+          var port = this.address().port
+          var client = http2.connect('http://127.0.0.1:' + port)
+          client.on('error', noop)
 
-    //       server.listen(function () {
-    //         socket = net.connect(this.address().port, function () {
-    //           writeRequest(this)
-    //         })
+          // send two requests over the same HTTP/2 session
+          var r1 = client.request({ ':path': '/' })
+          r1.on('response', function () {})
+          r1.end()
 
-    //         socket.on('close', function () {
-    //           assert.strictEqual(count, 2)
-    //           if (!--wait) server.close(done)
-    //         })
+          var r2 = client.request({ ':path': '/' })
+          r2.on('response', function () {})
+          r2.end()
 
-    //         socket.resume()
-    //       })
-    //     })
-    //   })
+          // destroy the client session to simulate a network error
+          setImmediate(function () {
+            client.destroy()
+          })
+        })
+      })
+    })
 
     describe('when calling many times on same request', function () {
       it('should not print warnings', function (done) {
