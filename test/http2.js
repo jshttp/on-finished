@@ -488,52 +488,6 @@ describe('onFinished(req, listener)', function () {
         response.end('knock, knock')
       })
     })
-
-    //     it('should fire when called after finish', function (done) {
-    //       var client
-    //       var server = http.createServer(function (req, res) {
-    //         res.statusCode = 405
-    //         res.end()
-    //       })
-    //       server.on('connect', function (req, socket, bodyHead) {
-    //         var data = [bodyHead]
-
-    //         onFinished(req, function (err) {
-    //           assert.ifError(err)
-    //           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
-    //           socket.write('HTTP/1.1 200 OK\r\n\r\n')
-    //         })
-
-    //         socket.on('data', function (chunk) {
-    //           assert.strictEqual(chunk.toString(), 'ping')
-    //           onFinished(req, function () {
-    //             socket.end('pong')
-    //           })
-    //         })
-
-    //         req.on('data', function (chunk) {
-    //           data.push(chunk)
-    //         })
-    //       })
-
-  //       server.listen(function () {
-  //         client = http.request({
-  //           hostname: '127.0.0.1',
-  //           method: 'CONNECT',
-  //           path: '127.0.0.1:80',
-  //           port: this.address().port
-  //         })
-  //         client.on('connect', function (res, socket, bodyHead) {
-  //           socket.write('ping')
-  //           socket.on('data', function (chunk) {
-  //             assert.strictEqual(chunk.toString(), 'pong')
-  //             socket.end()
-  //             server.close(done)
-  //           })
-  //         })
-  //         client.end('knock, knock')
-  //       })
-  //     })
   })
 })
 
