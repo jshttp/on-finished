@@ -546,7 +546,6 @@ describe('isFinished(req)', function () {
         done()
       })
 
-      // WHY?
       req.resume()
       res.end()
     })
