@@ -454,77 +454,67 @@ describe('onFinished(req, listener)', function () {
     })
   })
 
-  //   describe('when CONNECT method', function () {
-  //     it('should fire when request finishes', function (done) {
-  //       var client
-  //       var server = http.createServer(function (req, res) {
-  //         res.statusCode = 405
-  //         res.end()
-  //       })
-  //       server.on('connect', function (req, socket, bodyHead) {
-  //         var data = [bodyHead]
+  describe('when CONNECT method', function () {
+    it('should fire when request finishes', function (done) {
+      var client
+      var server = http.createServer(function (req, res) {
+        res.statusCode = 405
+        res.end()
+      })
 
-  //         onFinished(req, function (err) {
-  //           assert.ifError(err)
-  //           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
+      server.on('connect', function (req, session) {
+        var data = []
 
-  //           socket.on('data', function (chunk) {
-  //             assert.strictEqual(chunk.toString(), 'ping')
-  //             socket.end('pong')
-  //           })
-  //           socket.write('HTTP/1.1 200 OK\r\n\r\n')
-  //         })
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
+          session.end('pong')
+        })
 
-  //         req.on('data', function (chunk) {
-  //           data.push(chunk)
-  //         })
-  //       })
+        req.on('data', function (chunk) {
+          data.push(chunk)
+        })
+      })
 
-  //       server.listen(function () {
-  //         client = http.request({
-  //           hostname: '127.0.0.1',
-  //           method: 'CONNECT',
-  //           path: '127.0.0.1:80',
-  //           port: this.address().port
-  //         })
-  //         client.on('connect', function (res, socket, bodyHead) {
-  //           socket.write('ping')
-  //           socket.on('data', function (chunk) {
-  //             assert.strictEqual(chunk.toString(), 'pong')
-  //             socket.end()
-  //             server.close(done)
-  //           })
-  //         })
-  //         client.end('knock, knock')
-  //       })
-  //     })
+      server.listen(function () {
+        client = http.connect('http://127.0.0.1:' + server.address().port)
+        var response = client.request({ ':method': 'CONNECT', ':authority': 'localhost' })
+        response.on('data', function (chunk) {
+          assert.strictEqual(chunk.toString(), 'pong')
+          client.close()
+          server.close(done)
+        })
 
-  //     it('should fire when called after finish', function (done) {
-  //       var client
-  //       var server = http.createServer(function (req, res) {
-  //         res.statusCode = 405
-  //         res.end()
-  //       })
-  //       server.on('connect', function (req, socket, bodyHead) {
-  //         var data = [bodyHead]
+        response.end('knock, knock')
+      })
+    })
 
-  //         onFinished(req, function (err) {
-  //           assert.ifError(err)
-  //           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
-  //           socket.write('HTTP/1.1 200 OK\r\n\r\n')
-  //         })
+    //     it('should fire when called after finish', function (done) {
+    //       var client
+    //       var server = http.createServer(function (req, res) {
+    //         res.statusCode = 405
+    //         res.end()
+    //       })
+    //       server.on('connect', function (req, socket, bodyHead) {
+    //         var data = [bodyHead]
 
-  //         socket.on('data', function (chunk) {
-  //           assert.strictEqual(chunk.toString(), 'ping')
-  //           onFinished(req, function () {
-  //             socket.end('pong')
-  //           })
-  //         })
+    //         onFinished(req, function (err) {
+    //           assert.ifError(err)
+    //           assert.strictEqual(Buffer.concat(data).toString(), 'knock, knock')
+    //           socket.write('HTTP/1.1 200 OK\r\n\r\n')
+    //         })
 
-  //         req.on('data', function (chunk) {
-  //           data.push(chunk)
-  //         })
-  //       })
+    //         socket.on('data', function (chunk) {
+    //           assert.strictEqual(chunk.toString(), 'ping')
+    //           onFinished(req, function () {
+    //             socket.end('pong')
+    //           })
+    //         })
+
+    //         req.on('data', function (chunk) {
+    //           data.push(chunk)
+    //         })
+    //       })
 
   //       server.listen(function () {
   //         client = http.request({
@@ -544,7 +534,7 @@ describe('onFinished(req, listener)', function () {
   //         client.end('knock, knock')
   //       })
   //     })
-  //   })
+  })
 
   //   describe('when Upgrade request', function () {
   //     it('should fire when request finishes', function (done) {
