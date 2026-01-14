@@ -127,6 +127,8 @@ read.
 There is no such thing as a response object to a `Upgrade` request in
 Node.js, so there is no support for one.
 
+This does not apply to HTTP/2 (see RFC 9113, section 8.6).
+
 ## Example
 
 The following code ensures that file descriptors are always closed
