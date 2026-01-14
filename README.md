@@ -155,7 +155,7 @@ var fs = require('fs')
 var http = require('http')
 var onFinished = require('on-finished')
 
-http2.createServer(function onRequest (req, res) {
+http.createServer(function onRequest (req, res) {
   var stream = fs.createReadStream('package.json')
   stream.pipe(res)
   onFinished(res, function () {
