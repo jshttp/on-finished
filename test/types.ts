@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse, createServer } from "node:http";
+import { IncomingMessage, OutgoingMessage, createServer } from "node:http";
 import { expectTypeOf } from "expect-type";
 import onFinished, { isFinished } from "..";
 
@@ -10,7 +10,7 @@ createServer((req, res) => {
 
   onFinished(res, (err, res) => {
     expectTypeOf(err).toEqualTypeOf<Error | null | undefined>();
-    expectTypeOf(res).toExtend<ServerResponse>();
+    expectTypeOf(res).toExtend<OutgoingMessage>();
   });
 
   expectTypeOf(isFinished(req)).toEqualTypeOf<boolean | undefined>();
