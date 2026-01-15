@@ -86,6 +86,8 @@ not even start certain operations if the request has already finished.
 
 ### HTTP CONNECT method
 
+#### HTTP/1.1
+
 The meaning of the `CONNECT` method from RFC 7231, section 4.3.6:
 
 > The CONNECT method requests that the recipient establish a tunnel to
@@ -107,6 +109,19 @@ the request will be considered "finished" even before it has been read.
 There is no such thing as a response object to a `CONNECT` request in
 Node.js, so there is no support for one.
 
+#### HTTP/2
+
+The meaning of the `CONNECT` method from RFC 9113, section 8.5:
+
+> The CONNECT method (Section 9.3.6 of [HTTP]) is used to convert an HTTP connection into a tunnel to a remote host. CONNECT is primarily used with HTTP proxies to establish a TLS session with an origin server for the purposes of interacting with "https" resources.
+
+In Node.js, these request objects come from the `'connect'` event on
+the HTTP/2 server.
+
+When this module is used on a HTTP/2 `CONNECT` request, the request is not
+considered "finished" until the underlying stream is closed. This means if the `CONNECT` request
+contains a request entity, the request will not be considered "finished" until it all data has been read and there's nothing else to read.
+
 ### HTTP Upgrade request
 
 The meaning of the `Upgrade` header from RFC 7230, section 6.1:
@@ -126,6 +141,8 @@ read.
 
 There is no such thing as a response object to a `Upgrade` request in
 Node.js, so there is no support for one.
+
+This does not apply to HTTP/2 (see RFC 9113, section 8.6).
 
 ## Example
 
