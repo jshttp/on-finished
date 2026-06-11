@@ -2,10 +2,14 @@
 var assert = require('assert')
 var asyncHooks = tryRequire('async_hooks')
 var http = require('http')
+var http2 = tryRequire('http2')
 var net = require('net')
 var onFinished = require('..')
 
 var describeAsyncHooks = typeof asyncHooks.AsyncLocalStorage === 'function'
+  ? describe
+  : describe.skip
+var describeHttp2 = typeof http2.createServer === 'function'
   ? describe
   : describe.skip
 
@@ -35,6 +39,23 @@ describe('onFinished(res, listener)', function () {
       })
 
       sendGet(server)
+    })
+
+    describeHttp2('when using http2', function () {
+      it('should fire the callback', function (done) {
+        var server = http2.createServer(function (req, res) {
+          onFinished(res, function (err, msg) {
+            assert.ifError(err)
+            assert.strictEqual(msg, res)
+            done()
+          })
+
+          req.resume()
+          res.end('hello, world')
+        })
+
+        sendHttp2Get(server)
+      })
     })
 
     describe('when called after finish', function () {
@@ -300,6 +321,25 @@ describe('isFinished(res)', function () {
     sendGet(server)
   })
 
+  describeHttp2('when using http2', function () {
+    it('should track response finish state', function (done) {
+      var server = http2.createServer(function (req, res) {
+        assert.strictEqual(onFinished.isFinished(res), false)
+
+        onFinished(res, function (err) {
+          assert.ifError(err)
+          assert.strictEqual(onFinished.isFinished(res), true)
+          done()
+        })
+
+        req.resume()
+        res.end('hello, world')
+      })
+
+      sendHttp2Get(server)
+    })
+  })
+
   describe('when requests pipelined', function () {
     it('should have correct state when socket shared', function (done) {
       var count = 0
@@ -442,6 +482,23 @@ describe('onFinished(req, listener)', function () {
       })
 
       sendGet(server)
+    })
+
+    describeHttp2('when using http2', function () {
+      it('should fire the callback', function (done) {
+        var server = http2.createServer(function (req, res) {
+          onFinished(req, function (err, msg) {
+            assert.ifError(err)
+            assert.strictEqual(msg, req)
+            done()
+          })
+
+          req.resume()
+          res.end('hello, world')
+        })
+
+        sendHttp2Get(server)
+      })
     })
 
     describe('when called after finish', function () {
@@ -890,6 +947,25 @@ describe('isFinished(req)', function () {
     sendGet(server)
   })
 
+  describeHttp2('when using http2', function () {
+    it('should track request finish state', function (done) {
+      var server = http2.createServer(function (req, res) {
+        assert.strictEqual(onFinished.isFinished(req), false)
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.strictEqual(onFinished.isFinished(req), true)
+          done()
+        })
+
+        req.resume()
+        res.end('hello, world')
+      })
+
+      sendHttp2Get(server)
+    })
+  })
+
   describe('when request data buffered', function () {
     it('should be false before request finishes', function (done) {
       var server = http.createServer(function (req, res) {
@@ -1168,6 +1244,21 @@ function sendGet (server) {
       res.resume()
       res.on('end', server.close.bind(server))
     })
+  })
+}
+
+function sendHttp2Get (server) {
+  server.listen(function onListening () {
+    var port = this.address().port
+    var client = http2.connect('http://127.0.0.1:' + port)
+    var req = client.request({ ':path': '/' })
+
+    req.resume()
+    req.on('end', function onEnd () {
+      client.close()
+      server.close()
+    })
+    req.end()
   })
 }
 
