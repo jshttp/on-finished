@@ -4,6 +4,7 @@ unreleased
   * Breaking Change: Node.js 18 is the minimum supported version
   * Validate that passed `listener` is a function
   * Add official HTTP/2 support for both compatibility mode and native streams
+  * Add TypeScript definitions for improved type safety and IDE support
 
 2.4.1 / 2022-02-22
 ==================
