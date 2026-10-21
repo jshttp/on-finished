@@ -173,6 +173,7 @@ jobs:
 
         - name: Node.js 21.x
           node-version: "21"
+          npm-i: mocha@11.8.0
 
         - name: Node.js 22.x
           node-version: "22"
