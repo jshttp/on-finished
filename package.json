@@ -31,7 +31,6 @@
     "node": ">= 0.8"
   },
   "files": [
-    "HISTORY.md",
     "LICENSE",
     "index.js"
   ],
