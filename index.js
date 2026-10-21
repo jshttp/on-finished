@@ -61,7 +61,7 @@ function onFinished (msg, listener) {
  * Determine if message is already finished.
  *
  * @param {object} msg
- * @return {boolean}
+ * @return {boolean | undefined}
  * @public
  */
 
