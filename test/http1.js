@@ -5,6 +5,70 @@ const { sendGetHTTP1: sendGet, noop, captureStderr } = require('./support/utils'
 const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
+  describe('when a client response is not consumed', function () {
+    it('should finish on socket close and clean up before the body is read', function (done) {
+      var server = http.createServer(function (req, res) {
+        res.end('response body')
+      })
+
+      server.listen(function () {
+        var client = http.get({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        }, function (res) {
+          var socket = res.socket
+          var calls = 0
+          var events = ['end', 'finish', 'error', 'close', 'aborted']
+          var messageListeners = events.map(function (event) { return res.listeners(event) })
+          var closeListeners = socket.listeners('close')
+
+          onFinished(res, function (err, msg) {
+            assert.ifError(err)
+            assert.strictEqual(msg, res)
+            calls++
+
+            events.forEach(function (event, index) {
+              addedMessageListeners[index].forEach(function (listener) {
+                assert.strictEqual(res.listeners(event).indexOf(listener), -1)
+              })
+            })
+            addedCloseListeners.forEach(function (listener) {
+              assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+            })
+          })
+
+          var addedMessageListeners = events.map(function (event, index) {
+            return res.listeners(event).filter(function (listener) {
+              return messageListeners[index].indexOf(listener) === -1
+            })
+          })
+          var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+            return closeListeners.indexOf(listener) === -1
+          })
+
+          socket.once('close', function () {
+            setImmediate(function () {
+              assert.strictEqual(res.complete, true)
+              assert.strictEqual(res.readableEnded, false)
+              assert.ok(res.readableLength > 0)
+              assert.strictEqual(calls, 1)
+
+              res.once('end', function () {
+                setImmediate(function () {
+                  assert.strictEqual(calls, 1)
+                  server.close(done)
+                })
+              })
+              res.resume()
+            })
+          })
+        })
+        client.on('error', done)
+      })
+    })
+  })
+
   describe('when using keep-alive', function () {
     it('should fire for each response', function (done) {
       var called = false
@@ -338,6 +402,73 @@ describe('isFinished(res)', function () {
 })
 
 describe('onFinished(req, listener)', function () {
+  describe('when a server request is partially read and paused', function () {
+    it('should finish on socket close and clean up before reading the remaining body', function (done) {
+      var server = http.createServer(function (req, res) {
+        var socket = req.socket
+        var calls = 0
+        var events = ['end', 'finish', 'error', 'close', 'aborted']
+        var messageListeners = events.map(function (event) { return req.listeners(event) })
+        var closeListeners = socket.listeners('close')
+
+        onFinished(req, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, req)
+          calls++
+
+          events.forEach(function (event, index) {
+            addedMessageListeners[index].forEach(function (listener) {
+              assert.strictEqual(req.listeners(event).indexOf(listener), -1)
+            })
+          })
+          addedCloseListeners.forEach(function (listener) {
+            assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+          })
+        })
+
+        var addedMessageListeners = events.map(function (event, index) {
+          return req.listeners(event).filter(function (listener) {
+            return messageListeners[index].indexOf(listener) === -1
+          })
+        })
+        var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+          return closeListeners.indexOf(listener) === -1
+        })
+
+        socket.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(req.complete, true)
+            assert.strictEqual(req.readableEnded, false)
+            assert.strictEqual(req.readableLength, 7)
+            assert.strictEqual(calls, 1)
+
+            req.once('end', function () {
+              setImmediate(function () {
+                assert.strictEqual(calls, 1)
+                server.close(done)
+              })
+            })
+            req.resume()
+          })
+        })
+
+        req.once('readable', function () {
+          assert.strictEqual(req.read(1).toString(), 'a')
+          req.pause()
+          res.end('response')
+        })
+      })
+
+      server.listen(function () {
+        var client = net.connect(this.address().port, '127.0.0.1', function () {
+          client.end('POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 8\r\nConnection: close\r\n\r\nabcdefgh')
+        })
+        client.on('error', done)
+        client.resume()
+      })
+    })
+  })
+
   describe('when using keep-alive', function () {
     it('should fire for each request', function (done) {
       var called = false

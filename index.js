@@ -104,11 +104,21 @@ function isFinished (msg) {
  */
 
 function attachFinishedListener (msg, callback) {
-  const cleanupFinished = stream.finished(msg, (error) => {
+  let finished = false
+  let socket
+
+  const cleanupFinished = stream.finished(msg, onFinish)
+
+  function onFinish (error) {
+    if (finished) return
+    finished = true
+
     cleanupFinished()
+    msg.removeListener('socket', onSocket)
+    socket?.removeListener('close', onSocketClose)
 
     // The message may not forward its transport's error, especially in HTTP/2.
-    const transportError = msg.stream?.errored || msg.socket?.errored
+    const transportError = msg.stream?.errored || socket?.errored || msg.socket?.errored
     if (transportError) {
       error = transportError
     } else if (error && error.code === 'ECONNRESET' && !msg.stream && msg.aborted) {
@@ -120,7 +130,28 @@ function attachFinishedListener (msg, callback) {
     }
 
     callback(error || undefined)
-  })
+  }
+
+  function onSocket (assignedSocket) {
+    msg.removeListener('socket', onSocket)
+    if (finished) return
+
+    socket = assignedSocket
+    socket.once('close', onSocketClose)
+  }
+
+  function onSocketClose () {
+    onFinish()
+  }
+
+  // HTTP/1 messages can retain unread data after their socket closes.
+  if (!msg.stream && 'socket' in msg) {
+    if (msg.socket) {
+      onSocket(msg.socket)
+    } else {
+      msg.once('socket', onSocket)
+    }
+  }
 }
 
 /**
