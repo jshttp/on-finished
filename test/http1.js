@@ -5,7 +5,113 @@ const { sendGetHTTP1: sendGet, noop, captureStderr } = require('./support/utils'
 const onFinished = require('..')
 
 describe('onFinished(res, listener)', function () {
+  describe('when a client response is not consumed', function () {
+    it('should finish on socket close and clean up before the body is read', function (done) {
+      var server = http.createServer(function (req, res) {
+        res.end('response body')
+      })
+
+      server.listen(function () {
+        var client = http.get({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        }, function (res) {
+          var socket = res.socket
+          var calls = 0
+          var events = ['end', 'finish', 'error', 'close', 'aborted']
+          var messageListeners = events.map(function (event) { return res.listeners(event) })
+          var closeListeners = socket.listeners('close')
+
+          onFinished(res, function (err, msg) {
+            assert.ifError(err)
+            assert.strictEqual(msg, res)
+            calls++
+
+            events.forEach(function (event, index) {
+              addedMessageListeners[index].forEach(function (listener) {
+                assert.strictEqual(res.listeners(event).indexOf(listener), -1)
+              })
+            })
+            addedCloseListeners.forEach(function (listener) {
+              assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+            })
+          })
+
+          var addedMessageListeners = events.map(function (event, index) {
+            return res.listeners(event).filter(function (listener) {
+              return messageListeners[index].indexOf(listener) === -1
+            })
+          })
+          var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+            return closeListeners.indexOf(listener) === -1
+          })
+
+          socket.once('close', function () {
+            setImmediate(function () {
+              assert.strictEqual(res.complete, true)
+              assert.strictEqual(res.readableEnded, false)
+              assert.ok(res.readableLength > 0)
+              assert.strictEqual(calls, 1)
+
+              res.once('end', function () {
+                setImmediate(function () {
+                  assert.strictEqual(calls, 1)
+                  server.close(done)
+                })
+              })
+              res.resume()
+            })
+          })
+        })
+        client.on('error', done)
+      })
+    })
+  })
+
   describe('when using keep-alive', function () {
+    it('should remove the socket close listener when the response finishes', function (done) {
+      var calls = 0
+      var server = http.createServer(function (req, res) {
+        var socket = req.socket
+        var closeListeners = socket.listeners('close')
+
+        onFinished(res, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, res)
+          assert.strictEqual(socket.destroyed, false)
+          calls++
+
+          addedCloseListeners.forEach(function (listener) {
+            assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+          })
+
+          client.destroy()
+          server.close(function (err) {
+            assert.ifError(err)
+            assert.strictEqual(calls, 1)
+            done()
+          })
+        })
+
+        var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+          return closeListeners.indexOf(listener) === -1
+        })
+        assert.strictEqual(addedCloseListeners.length, 1)
+
+        res.end('response')
+      })
+      var client
+
+      server.listen(function () {
+        client = net.connect(this.address().port, '127.0.0.1', function () {
+          writeRequest(this)
+        })
+        client.on('error', done)
+        client.resume()
+      })
+    })
+
     it('should fire for each response', function (done) {
       var called = false
       var server = http.createServer(function (req, res) {
@@ -93,6 +199,85 @@ describe('onFinished(res, listener)', function () {
   })
 
   describe('when response errors', function () {
+    it('should forward the original error once when destroyed', function (done) {
+      var server = http.createServer(function (req, res) {
+        var expected = new Error('HTTP/1 message failure')
+        var calls = []
+        var closed = 0
+
+        onFinished(res, function (err, msg) {
+          calls.push({ err: err, msg: msg })
+        })
+
+        req.socket.once('close', onClose)
+        res.once('close', onClose)
+
+        assert.strictEqual(onFinished.isFinished(res), false)
+        res.destroy(expected)
+
+        function onClose () {
+          if (++closed !== 2) return
+
+          setImmediate(function () {
+            assert.strictEqual(calls.length, 1)
+            assert.strictEqual(calls[0].err, expected)
+            assert.strictEqual(calls[0].msg, res)
+            server.close(done)
+          })
+        }
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST'
+        })
+        client.on('error', noop)
+        client.write('unfinished request body')
+      })
+    })
+
+    it('should preserve the original ECONNRESET error when destroyed', function (done) {
+      var server = http.createServer(function (req, res) {
+        var expected = new Error('HTTP/1 message failure')
+        expected.code = 'ECONNRESET'
+        var calls = []
+        var closed = 0
+
+        onFinished(res, function (err, msg) {
+          calls.push({ err: err, msg: msg })
+        })
+
+        req.socket.once('close', onClose)
+        res.once('close', onClose)
+
+        assert.strictEqual(onFinished.isFinished(res), false)
+        res.destroy(expected)
+
+        function onClose () {
+          if (++closed !== 2) return
+
+          setImmediate(function () {
+            assert.strictEqual(calls.length, 1)
+            assert.strictEqual(calls[0].err, expected)
+            assert.strictEqual(calls[0].msg, res)
+            server.close(done)
+          })
+        }
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST'
+        })
+        client.on('error', noop)
+        client.write('unfinished request body')
+      })
+    })
+
     it('should fire with error', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(res, function (err) {
@@ -259,6 +444,234 @@ describe('isFinished(res)', function () {
 })
 
 describe('onFinished(req, listener)', function () {
+  describe('when a client request has no assigned socket', function () {
+    it('should preserve an explicit ECONNRESET when destroyed and then aborted', function (done) {
+      var server = http.createServer()
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        })
+        var expected = new Error('request destroyed before socket assignment')
+        expected.code = 'ECONNRESET'
+        var calls = 0
+        var socketListeners = client.listeners('socket')
+
+        assert.strictEqual(client.socket, null)
+
+        onFinished(client, function (err, msg) {
+          assert.strictEqual(err, expected)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, true)
+          assert.strictEqual(client.socket, null)
+          assert.deepStrictEqual(client.listeners('socket'), socketListeners)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.destroy(expected)
+        client.abort()
+      })
+    })
+
+    it('should remove the pending socket listener when destroyed', function (done) {
+      var server = http.createServer()
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        })
+        var expected = new Error('request destroyed before socket assignment')
+        var calls = 0
+        var socketListeners = client.listeners('socket')
+
+        assert.strictEqual(client.socket, null)
+
+        onFinished(client, function (err, msg) {
+          assert.strictEqual(err, expected)
+          assert.strictEqual(msg, client)
+          assert.deepStrictEqual(client.listeners('socket'), socketListeners)
+          calls++
+        })
+
+        assert.strictEqual(client.listeners('socket').length, socketListeners.length + 1)
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(client.socket, null)
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.destroy(expected)
+      })
+    })
+  })
+
+  describe('when the server closes without a client abort', function () {
+    it('should preserve the generated ECONNRESET error and finish once', function (done) {
+      var server = http.createServer(function (req) {
+        req.socket.destroy()
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST',
+          agent: false
+        })
+        var calls = 0
+        var error
+
+        client.on('error', function (err) {
+          error = err
+        })
+
+        onFinished(client, function (err, msg) {
+          assert.ok(error)
+          assert.strictEqual(error.code, 'ECONNRESET')
+          assert.strictEqual(err, error)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, false)
+          assert.strictEqual(client.socket.errored, null)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.write('unfinished request body')
+      })
+    })
+  })
+
+  describe('when a client request is aborted as the peer closes', function () {
+    it('should ignore the generated ECONNRESET error and finish once', function (done) {
+      var server = http.createServer(function (req) {
+        req.socket.destroy()
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST',
+          agent: false
+        })
+        var calls = 0
+        var error
+
+        client.once('socket', function (socket) {
+          // Abort before HTTP's end handler generates the socket-hang-up error.
+          socket.prependOnceListener('end', function () {
+            client.abort()
+          })
+        })
+        client.on('error', function (err) {
+          error = err
+        })
+
+        onFinished(client, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, true)
+          assert.strictEqual(client.socket.errored, null)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.ok(error)
+            assert.strictEqual(error.code, 'ECONNRESET')
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.write('unfinished request body')
+      })
+    })
+  })
+
+  describe('when a server request is partially read and paused', function () {
+    it('should finish on socket close and clean up before reading the remaining body', function (done) {
+      var server = http.createServer(function (req, res) {
+        var socket = req.socket
+        var calls = 0
+        var events = ['end', 'finish', 'error', 'close', 'aborted']
+        var messageListeners = events.map(function (event) { return req.listeners(event) })
+        var closeListeners = socket.listeners('close')
+
+        onFinished(req, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, req)
+          calls++
+
+          events.forEach(function (event, index) {
+            addedMessageListeners[index].forEach(function (listener) {
+              assert.strictEqual(req.listeners(event).indexOf(listener), -1)
+            })
+          })
+          addedCloseListeners.forEach(function (listener) {
+            assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+          })
+        })
+
+        var addedMessageListeners = events.map(function (event, index) {
+          return req.listeners(event).filter(function (listener) {
+            return messageListeners[index].indexOf(listener) === -1
+          })
+        })
+        var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+          return closeListeners.indexOf(listener) === -1
+        })
+
+        socket.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(req.complete, true)
+            assert.strictEqual(req.readableEnded, false)
+            assert.strictEqual(req.readableLength, 7)
+            assert.strictEqual(calls, 1)
+
+            req.once('end', function () {
+              setImmediate(function () {
+                assert.strictEqual(calls, 1)
+                server.close(done)
+              })
+            })
+            req.resume()
+          })
+        })
+
+        req.once('readable', function () {
+          assert.strictEqual(req.read(1).toString(), 'a')
+          req.pause()
+          res.end('response')
+        })
+      })
+
+      server.listen(function () {
+        var client = net.connect(this.address().port, '127.0.0.1', function () {
+          client.end('POST / HTTP/1.1\r\nHost: localhost\r\nContent-Length: 8\r\nConnection: close\r\n\r\nabcdefgh')
+        })
+        client.on('error', done)
+        client.resume()
+      })
+    })
+  })
+
   describe('when using keep-alive', function () {
     it('should fire for each request', function (done) {
       var called = false
@@ -301,6 +714,85 @@ describe('onFinished(req, listener)', function () {
   })
 
   describe('when request errors', function () {
+    it('should forward the original error once when destroyed', function (done) {
+      var server = http.createServer(function (req, res) {
+        var expected = new Error('HTTP/1 message failure')
+        var calls = []
+        var closed = 0
+
+        onFinished(req, function (err, msg) {
+          calls.push({ err: err, msg: msg })
+        })
+
+        req.socket.once('close', onClose)
+        req.once('close', onClose)
+
+        assert.strictEqual(onFinished.isFinished(req), false)
+        req.destroy(expected)
+
+        function onClose () {
+          if (++closed !== 2) return
+
+          setImmediate(function () {
+            assert.strictEqual(calls.length, 1)
+            assert.strictEqual(calls[0].err, expected)
+            assert.strictEqual(calls[0].msg, req)
+            server.close(done)
+          })
+        }
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST'
+        })
+        client.on('error', noop)
+        client.write('unfinished request body')
+      })
+    })
+
+    it('should preserve the original ECONNRESET error when destroyed', function (done) {
+      var server = http.createServer(function (req, res) {
+        var expected = new Error('HTTP/1 message failure')
+        expected.code = 'ECONNRESET'
+        var calls = []
+        var closed = 0
+
+        onFinished(req, function (err, msg) {
+          calls.push({ err: err, msg: msg })
+        })
+
+        req.socket.once('close', onClose)
+        req.once('close', onClose)
+
+        assert.strictEqual(onFinished.isFinished(req), false)
+        req.destroy(expected)
+
+        function onClose () {
+          if (++closed !== 2) return
+
+          setImmediate(function () {
+            assert.strictEqual(calls.length, 1)
+            assert.strictEqual(calls[0].err, expected)
+            assert.strictEqual(calls[0].msg, req)
+            server.close(done)
+          })
+        }
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST'
+        })
+        client.on('error', noop)
+        client.write('unfinished request body')
+      })
+    })
+
     it('should fire with error', function (done) {
       var server = http.createServer(function (req, res) {
         onFinished(req, function (err) {

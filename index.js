@@ -105,63 +105,59 @@ function isFinished (msg) {
 
 function attachFinishedListener (msg, callback) {
   let finished = false
-  let cleanupSocket
+  let socket
+
+  const cleanupFinished = stream.finished(msg, (error) => {
+    // Wait for an aborted HTTP/2 request to close so its reset error is stored.
+    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE' && msg.stream && msg.aborted && !msg.stream.errored) {
+      msg.once('close', () => onFinish(error))
+      return
+    }
+
+    onFinish(error)
+  })
 
   function onFinish (error) {
     if (finished) return
     finished = true
-    callback(error)
+
+    cleanupFinished()
+    msg.removeListener('socket', onSocket)
+    socket?.removeListener('close', onSocketClose)
+
+    // The message may not forward its transport's error, especially in HTTP/2.
+    const transportError = msg.stream?.errored || socket?.errored || msg.socket?.errored
+    if (transportError) {
+      error = transportError
+    } else if (error && error.code === 'ECONNRESET' && !msg.stream && msg.aborted && socket) {
+      // Ignore the generated request-abort error when the assigned socket has no error.
+      error = undefined
+    } else if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+      // A close without a stored transport error is not itself an error.
+      error = undefined
+    }
+
+    callback(error || undefined)
   }
 
-  const cleanupFinished = stream.finished(msg, (error) => {
-    cleanupFinished()
-    if (cleanupSocket) {
-      cleanupSocket()
-    }
-
-    // ignore premature close error
-    if (error && error.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      onFinish(error)
-    } else {
-      onFinish()
-    }
-  })
-
-  function onSocket (socket) {
-    // remove listener
+  function onSocket (assignedSocket) {
     msg.removeListener('socket', onSocket)
-
     if (finished) return
 
-    function onSocketErrorOrClose (error) {
-      // remove listeners
-      socket.removeListener('error', onSocketErrorOrClose)
-      socket.removeListener('close', onSocketErrorOrClose)
-
-      onFinish(error)
-    }
-
-    // finished on first socket event
-    socket.on('error', onSocketErrorOrClose)
-    socket.on('close', onSocketErrorOrClose)
-
-    // cleanup socket listeners
-    cleanupSocket = function () {
-      socket.removeListener('error', onSocketErrorOrClose)
-      socket.removeListener('close', onSocketErrorOrClose)
-    }
+    socket = assignedSocket
+    socket.once('close', onSocketClose)
   }
 
-  if (msg.socket) {
-    // socket already assigned
-    onSocket(msg.socket)
-  } else {
-    // wait for socket to be assigned
-    msg.on('socket', onSocket)
+  function onSocketClose () {
+    onFinish()
+  }
 
-    // cleanup socket listener in case the socket is never assigned
-    cleanupSocket = function () {
-      msg.removeListener('socket', onSocket)
+  // HTTP/1 messages can retain unread data after their socket closes.
+  if (!msg.stream && 'socket' in msg) {
+    if (msg.socket) {
+      onSocket(msg.socket)
+    } else {
+      msg.once('socket', onSocket)
     }
   }
 }
