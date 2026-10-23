@@ -445,6 +445,42 @@ describe('isFinished(res)', function () {
 
 describe('onFinished(req, listener)', function () {
   describe('when a client request has no assigned socket', function () {
+    it('should preserve an explicit ECONNRESET when destroyed and then aborted', function (done) {
+      var server = http.createServer()
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        })
+        var expected = new Error('request destroyed before socket assignment')
+        expected.code = 'ECONNRESET'
+        var calls = 0
+        var socketListeners = client.listeners('socket')
+
+        assert.strictEqual(client.socket, null)
+
+        onFinished(client, function (err, msg) {
+          assert.strictEqual(err, expected)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, true)
+          assert.strictEqual(client.socket, null)
+          assert.deepStrictEqual(client.listeners('socket'), socketListeners)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.destroy(expected)
+        client.abort()
+      })
+    })
+
     it('should remove the pending socket listener when destroyed', function (done) {
       var server = http.createServer()
 

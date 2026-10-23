@@ -129,8 +129,8 @@ function attachFinishedListener (msg, callback) {
     const transportError = msg.stream?.errored || socket?.errored || msg.socket?.errored
     if (transportError) {
       error = transportError
-    } else if (error && error.code === 'ECONNRESET' && !msg.stream && msg.aborted) {
-      // Ignore the generated request-abort error when the socket has no error.
+    } else if (error && error.code === 'ECONNRESET' && !msg.stream && msg.aborted && socket) {
+      // Ignore the generated request-abort error when the assigned socket has no error.
       error = undefined
     } else if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
       // A close without a stored transport error is not itself an error.
