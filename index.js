@@ -107,7 +107,15 @@ function attachFinishedListener (msg, callback) {
   let finished = false
   let socket
 
-  const cleanupFinished = stream.finished(msg, onFinish)
+  const cleanupFinished = stream.finished(msg, (error) => {
+    // Wait for an aborted HTTP/2 request to close so its reset error is stored.
+    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE' && msg.stream && msg.aborted && !msg.stream.errored) {
+      msg.once('close', () => onFinish(error))
+      return
+    }
+
+    onFinish(error)
+  })
 
   function onFinish (error) {
     if (finished) return

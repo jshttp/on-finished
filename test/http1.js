@@ -70,6 +70,48 @@ describe('onFinished(res, listener)', function () {
   })
 
   describe('when using keep-alive', function () {
+    it('should remove the socket close listener when the response finishes', function (done) {
+      var calls = 0
+      var server = http.createServer(function (req, res) {
+        var socket = req.socket
+        var closeListeners = socket.listeners('close')
+
+        onFinished(res, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, res)
+          assert.strictEqual(socket.destroyed, false)
+          calls++
+
+          addedCloseListeners.forEach(function (listener) {
+            assert.strictEqual(socket.listeners('close').indexOf(listener), -1)
+          })
+
+          client.destroy()
+          server.close(function (err) {
+            assert.ifError(err)
+            assert.strictEqual(calls, 1)
+            done()
+          })
+        })
+
+        var addedCloseListeners = socket.listeners('close').filter(function (listener) {
+          return closeListeners.indexOf(listener) === -1
+        })
+        assert.strictEqual(addedCloseListeners.length, 1)
+
+        res.end('response')
+      })
+      var client
+
+      server.listen(function () {
+        client = net.connect(this.address().port, '127.0.0.1', function () {
+          writeRequest(this)
+        })
+        client.on('error', done)
+        client.resume()
+      })
+    })
+
     it('should fire for each response', function (done) {
       var called = false
       var server = http.createServer(function (req, res) {
@@ -402,6 +444,90 @@ describe('isFinished(res)', function () {
 })
 
 describe('onFinished(req, listener)', function () {
+  describe('when a client request has no assigned socket', function () {
+    it('should remove the pending socket listener when destroyed', function (done) {
+      var server = http.createServer()
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          agent: false
+        })
+        var expected = new Error('request destroyed before socket assignment')
+        var calls = 0
+        var socketListeners = client.listeners('socket')
+
+        assert.strictEqual(client.socket, null)
+
+        onFinished(client, function (err, msg) {
+          assert.strictEqual(err, expected)
+          assert.strictEqual(msg, client)
+          assert.deepStrictEqual(client.listeners('socket'), socketListeners)
+          calls++
+        })
+
+        assert.strictEqual(client.listeners('socket').length, socketListeners.length + 1)
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(client.socket, null)
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.destroy(expected)
+      })
+    })
+  })
+
+  describe('when a client request is aborted as the peer closes', function () {
+    it('should ignore the generated ECONNRESET error and finish once', function (done) {
+      var server = http.createServer(function (req) {
+        req.socket.destroy()
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST',
+          agent: false
+        })
+        var calls = 0
+        var error
+
+        client.once('socket', function (socket) {
+          // Abort before HTTP's end handler generates the socket-hang-up error.
+          socket.prependOnceListener('end', function () {
+            client.abort()
+          })
+        })
+        client.on('error', function (err) {
+          error = err
+        })
+
+        onFinished(client, function (err, msg) {
+          assert.ifError(err)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, true)
+          assert.strictEqual(client.socket.errored, null)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.ok(error)
+            assert.strictEqual(error.code, 'ECONNRESET')
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.write('unfinished request body')
+      })
+    })
+  })
+
   describe('when a server request is partially read and paused', function () {
     it('should finish on socket close and clean up before reading the remaining body', function (done) {
       var server = http.createServer(function (req, res) {

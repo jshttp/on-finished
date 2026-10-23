@@ -7,6 +7,102 @@ const { sendGetHTTP2: sendGet, noop, captureStderr } = require('./support/utils'
 describe('http2 compatibility mode', function () {
   describe('onFinished(res, listener)', function () {
     describe('when reusing an HTTP/2 session', function () {
+      it('should isolate a peer cancellation and clean up response listeners', function (done) {
+        var cancelledCalls = 0
+        var healthyCalls = 0
+        var received = 0
+        var server = http2.createServer(function (req, res) {
+          if (req.url === '/healthy') {
+            onFinished(res, function (err, msg) {
+              assert.ifError(err)
+              assert.strictEqual(msg, res)
+              healthyCalls++
+            })
+
+            req.once('end', function () {
+              res.end('healthy response')
+            })
+            req.resume()
+          } else {
+            var stream = req.stream
+            var session = stream.session
+            var events = ['end', 'finish', 'error', 'close', 'aborted']
+            var listeners = events.map(function (event) { return res.listeners(event) })
+
+            onFinished(res, function (err, msg) {
+              assert.ifError(err)
+              assert.strictEqual(msg, res)
+              assert.strictEqual(req.aborted, true)
+              cancelledCalls++
+
+              events.forEach(function (event, index) {
+                addedListeners[index].forEach(function (listener) {
+                  assert.strictEqual(res.listeners(event).indexOf(listener), -1)
+                })
+              })
+            })
+
+            var addedListeners = events.map(function (event, index) {
+              return res.listeners(event).filter(function (listener) {
+                return listeners[index].indexOf(listener) === -1
+              })
+            })
+
+            stream.once('close', function () {
+              setImmediate(function () {
+                assert.strictEqual(stream.rstCode, http2.constants.NGHTTP2_CANCEL)
+                assert.strictEqual(stream.errored, null)
+                assert.strictEqual(cancelledCalls, 1)
+                assert.strictEqual(healthyCalls, 0)
+                assert.strictEqual(session.closed, false)
+                assert.strictEqual(session.destroyed, false)
+                assert.strictEqual(client.closed, false)
+                assert.strictEqual(client.destroyed, false)
+                healthy.end('remaining request body')
+              })
+            })
+            // Keep the request pending if the client ends it before resetting.
+            req.pause()
+          }
+
+          if (++received === 2) {
+            cancelled.close(http2.constants.NGHTTP2_CANCEL)
+          }
+        })
+        var client
+        var cancelled
+        var healthy
+
+        server.listen(function () {
+          client = http2.connect('http://127.0.0.1:' + this.address().port)
+          client.on('error', done)
+
+          cancelled = client.request({ ':method': 'POST', ':path': '/cancelled' })
+          cancelled.on('error', done)
+          cancelled.resume()
+          cancelled.write('unfinished request body')
+
+          healthy = client.request({ ':method': 'POST', ':path': '/healthy' })
+          healthy.on('error', done)
+          healthy.setEncoding('utf8')
+
+          var body = ''
+          healthy.on('data', function (chunk) { body += chunk })
+          healthy.once('end', function () {
+            setImmediate(function () {
+              assert.strictEqual(body, 'healthy response')
+              assert.strictEqual(cancelledCalls, 1)
+              assert.strictEqual(healthyCalls, 1)
+              assert.strictEqual(client.closed, false)
+              assert.strictEqual(client.destroyed, false)
+              client.close()
+              server.close(done)
+            })
+          })
+          healthy.write('unfinished request body')
+        })
+      })
+
       it('should fire for each response on the same HTTP/2 session', function (done) {
         var called = false
         var server = http2.createServer(function (req, res) {
@@ -115,6 +211,70 @@ describe('http2 compatibility mode', function () {
     })
 
     describe('when response errors', function () {
+      it('should forward a peer reset error once and remove response listeners', function (done) {
+        var server = http2.createServer(function (req, res) {
+          var stream = req.stream
+          var calls = []
+          var expected
+          var events = ['end', 'finish', 'error', 'close', 'aborted']
+          var listeners = events.map(function (event) { return res.listeners(event) })
+
+          stream.once('error', function (err) {
+            expected = err
+          })
+
+          onFinished(res, function (err, msg) {
+            calls.push({ err: err, msg: msg })
+
+            events.forEach(function (event, index) {
+              addedListeners[index].forEach(function (listener) {
+                assert.strictEqual(res.listeners(event).indexOf(listener), -1)
+              })
+            })
+          })
+
+          var addedListeners = events.map(function (event, index) {
+            return res.listeners(event).filter(function (listener) {
+              return listeners[index].indexOf(listener) === -1
+            })
+          })
+
+          stream.once('close', function () {
+            setImmediate(function () {
+              assert.ok(expected)
+              assert.strictEqual(expected.code, 'ERR_HTTP2_STREAM_ERROR')
+              assert.strictEqual(stream.rstCode, http2.constants.NGHTTP2_INTERNAL_ERROR)
+              assert.strictEqual(stream.errored, expected)
+              assert.strictEqual(calls.length, 1)
+              assert.strictEqual(calls[0].err, expected)
+              assert.strictEqual(calls[0].msg, res)
+              assert.strictEqual(client.closed, false)
+              assert.strictEqual(client.destroyed, false)
+              client.close()
+              server.close(done)
+            })
+          })
+
+          // Keep the request pending if the client ends it before resetting.
+          req.pause()
+          res.write('waiting for peer reset')
+        })
+        var client
+
+        server.listen(function () {
+          client = http2.connect('http://127.0.0.1:' + this.address().port)
+          client.on('error', done)
+
+          var req = client.request({ ':method': 'POST' })
+          req.on('error', noop)
+          req.once('response', function () {
+            req.close(http2.constants.NGHTTP2_INTERNAL_ERROR)
+          })
+          req.resume()
+          req.write('unfinished request body')
+        })
+      })
+
       it('should forward the original error once and remove stream listeners', function (done) {
         var server = http2.createServer(function (req, res) {
           var stream = req.stream
@@ -377,6 +537,102 @@ describe('http2 compatibility mode', function () {
     })
 
     describe('when reusing an HTTP/2 session', function () {
+      it('should isolate a peer cancellation and clean up request listeners', function (done) {
+        var cancelledCalls = 0
+        var healthyCalls = 0
+        var received = 0
+        var server = http2.createServer(function (req, res) {
+          if (req.url === '/healthy') {
+            onFinished(req, function (err, msg) {
+              assert.ifError(err)
+              assert.strictEqual(msg, req)
+              healthyCalls++
+            })
+
+            req.once('end', function () {
+              res.end('healthy response')
+            })
+            req.resume()
+          } else {
+            var stream = req.stream
+            var session = stream.session
+            var events = ['end', 'finish', 'error', 'close', 'aborted']
+            var listeners = events.map(function (event) { return req.listeners(event) })
+
+            onFinished(req, function (err, msg) {
+              assert.ifError(err)
+              assert.strictEqual(msg, req)
+              assert.strictEqual(req.aborted, true)
+              cancelledCalls++
+
+              events.forEach(function (event, index) {
+                addedListeners[index].forEach(function (listener) {
+                  assert.strictEqual(req.listeners(event).indexOf(listener), -1)
+                })
+              })
+            })
+
+            var addedListeners = events.map(function (event, index) {
+              return req.listeners(event).filter(function (listener) {
+                return listeners[index].indexOf(listener) === -1
+              })
+            })
+
+            stream.once('close', function () {
+              setImmediate(function () {
+                assert.strictEqual(stream.rstCode, http2.constants.NGHTTP2_CANCEL)
+                assert.strictEqual(stream.errored, null)
+                assert.strictEqual(cancelledCalls, 1)
+                assert.strictEqual(healthyCalls, 0)
+                assert.strictEqual(session.closed, false)
+                assert.strictEqual(session.destroyed, false)
+                assert.strictEqual(client.closed, false)
+                assert.strictEqual(client.destroyed, false)
+                healthy.end('remaining request body')
+              })
+            })
+            // Keep the request pending if the client ends it before resetting.
+            req.pause()
+          }
+
+          if (++received === 2) {
+            cancelled.close(http2.constants.NGHTTP2_CANCEL)
+          }
+        })
+        var client
+        var cancelled
+        var healthy
+
+        server.listen(function () {
+          client = http2.connect('http://127.0.0.1:' + this.address().port)
+          client.on('error', done)
+
+          cancelled = client.request({ ':method': 'POST', ':path': '/cancelled' })
+          cancelled.on('error', done)
+          cancelled.resume()
+          cancelled.write('unfinished request body')
+
+          healthy = client.request({ ':method': 'POST', ':path': '/healthy' })
+          healthy.on('error', done)
+          healthy.setEncoding('utf8')
+
+          var body = ''
+          healthy.on('data', function (chunk) { body += chunk })
+          healthy.once('end', function () {
+            setImmediate(function () {
+              assert.strictEqual(body, 'healthy response')
+              assert.strictEqual(cancelledCalls, 1)
+              assert.strictEqual(healthyCalls, 1)
+              assert.strictEqual(client.closed, false)
+              assert.strictEqual(client.destroyed, false)
+              client.close()
+              server.close(done)
+            })
+          })
+          healthy.write('unfinished request body')
+        })
+      })
+
       it('should fire for each request', function (done) {
         var called = false
         var server = http2.createServer(function (req, res) {
@@ -418,6 +674,70 @@ describe('http2 compatibility mode', function () {
     })
 
     describe('when request errors', function () {
+      it('should forward a peer reset error once and remove request listeners', function (done) {
+        var server = http2.createServer(function (req, res) {
+          var stream = req.stream
+          var calls = []
+          var expected
+          var events = ['end', 'finish', 'error', 'close', 'aborted']
+          var listeners = events.map(function (event) { return req.listeners(event) })
+
+          stream.once('error', function (err) {
+            expected = err
+          })
+
+          onFinished(req, function (err, msg) {
+            calls.push({ err: err, msg: msg })
+
+            events.forEach(function (event, index) {
+              addedListeners[index].forEach(function (listener) {
+                assert.strictEqual(req.listeners(event).indexOf(listener), -1)
+              })
+            })
+          })
+
+          var addedListeners = events.map(function (event, index) {
+            return req.listeners(event).filter(function (listener) {
+              return listeners[index].indexOf(listener) === -1
+            })
+          })
+
+          stream.once('close', function () {
+            setImmediate(function () {
+              assert.ok(expected)
+              assert.strictEqual(expected.code, 'ERR_HTTP2_STREAM_ERROR')
+              assert.strictEqual(stream.rstCode, http2.constants.NGHTTP2_INTERNAL_ERROR)
+              assert.strictEqual(stream.errored, expected)
+              assert.strictEqual(calls.length, 1)
+              assert.strictEqual(calls[0].err, expected)
+              assert.strictEqual(calls[0].msg, req)
+              assert.strictEqual(client.closed, false)
+              assert.strictEqual(client.destroyed, false)
+              client.close()
+              server.close(done)
+            })
+          })
+
+          // Keep the request pending if the client ends it before resetting.
+          req.pause()
+          res.write('waiting for peer reset')
+        })
+        var client
+
+        server.listen(function () {
+          client = http2.connect('http://127.0.0.1:' + this.address().port)
+          client.on('error', done)
+
+          var req = client.request({ ':method': 'POST' })
+          req.on('error', noop)
+          req.once('response', function () {
+            req.close(http2.constants.NGHTTP2_INTERNAL_ERROR)
+          })
+          req.resume()
+          req.write('unfinished request body')
+        })
+      })
+
       it('should forward the original error once and remove stream listeners', function (done) {
         var server = http2.createServer(function (req, res) {
           var stream = req.stream
