@@ -481,6 +481,47 @@ describe('onFinished(req, listener)', function () {
     })
   })
 
+  describe('when the server closes without a client abort', function () {
+    it('should preserve the generated ECONNRESET error and finish once', function (done) {
+      var server = http.createServer(function (req) {
+        req.socket.destroy()
+      })
+
+      server.listen(function () {
+        var client = http.request({
+          hostname: '127.0.0.1',
+          port: this.address().port,
+          method: 'POST',
+          agent: false
+        })
+        var calls = 0
+        var error
+
+        client.on('error', function (err) {
+          error = err
+        })
+
+        onFinished(client, function (err, msg) {
+          assert.ok(error)
+          assert.strictEqual(error.code, 'ECONNRESET')
+          assert.strictEqual(err, error)
+          assert.strictEqual(msg, client)
+          assert.strictEqual(client.aborted, false)
+          assert.strictEqual(client.socket.errored, null)
+          calls++
+        })
+
+        client.once('close', function () {
+          setImmediate(function () {
+            assert.strictEqual(calls, 1)
+            server.close(done)
+          })
+        })
+        client.write('unfinished request body')
+      })
+    })
+  })
+
   describe('when a client request is aborted as the peer closes', function () {
     it('should ignore the generated ECONNRESET error and finish once', function (done) {
       var server = http.createServer(function (req) {
