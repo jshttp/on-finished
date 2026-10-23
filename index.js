@@ -104,66 +104,23 @@ function isFinished (msg) {
  */
 
 function attachFinishedListener (msg, callback) {
-  let finished = false
-  let cleanupSocket
-
-  function onFinish (error) {
-    if (finished) return
-    finished = true
-    callback(error)
-  }
-
   const cleanupFinished = stream.finished(msg, (error) => {
     cleanupFinished()
-    if (cleanupSocket) {
-      cleanupSocket()
+
+    // The message may not forward its transport's error, especially in HTTP/2.
+    const transportError = msg.stream?.errored || msg.socket?.errored
+    if (transportError) {
+      error = transportError
+    } else if (error && error.code === 'ECONNRESET' && !msg.stream && msg.aborted) {
+      // Ignore the generated request-abort error when the socket has no error.
+      error = undefined
+    } else if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+      // A close without a stored transport error is not itself an error.
+      error = undefined
     }
 
-    // ignore premature close error
-    if (error && error.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-      onFinish(error)
-    } else {
-      onFinish()
-    }
+    callback(error || undefined)
   })
-
-  function onSocket (socket) {
-    // remove listener
-    msg.removeListener('socket', onSocket)
-
-    if (finished) return
-
-    function onSocketErrorOrClose (error) {
-      // remove listeners
-      socket.removeListener('error', onSocketErrorOrClose)
-      socket.removeListener('close', onSocketErrorOrClose)
-
-      onFinish(error)
-    }
-
-    // finished on first socket event
-    socket.on('error', onSocketErrorOrClose)
-    socket.on('close', onSocketErrorOrClose)
-
-    // cleanup socket listeners
-    cleanupSocket = function () {
-      socket.removeListener('error', onSocketErrorOrClose)
-      socket.removeListener('close', onSocketErrorOrClose)
-    }
-  }
-
-  if (msg.socket) {
-    // socket already assigned
-    onSocket(msg.socket)
-  } else {
-    // wait for socket to be assigned
-    msg.on('socket', onSocket)
-
-    // cleanup socket listener in case the socket is never assigned
-    cleanupSocket = function () {
-      msg.removeListener('socket', onSocket)
-    }
-  }
 }
 
 /**

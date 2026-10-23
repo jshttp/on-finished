@@ -115,6 +115,51 @@ describe('http2 compatibility mode', function () {
     })
 
     describe('when response errors', function () {
+      it('should forward the original error once and remove stream listeners', function (done) {
+        var server = http2.createServer(function (req, res) {
+          var stream = req.stream
+          var expected = new Error('HTTP/2 stream failure')
+          var calls = []
+
+          stream.once('close', function () {
+            setImmediate(function () {
+              assert.strictEqual(calls.length, 1)
+              assert.strictEqual(calls[0].err, expected)
+              assert.strictEqual(calls[0].msg, res)
+              assert.deepStrictEqual(calls[0].errorListeners, errorListeners)
+              assert.deepStrictEqual(calls[0].closeListeners, closeListeners)
+              client.destroy()
+              server.close(done)
+            })
+          })
+
+          var errorListeners = stream.listeners('error')
+          var closeListeners = stream.listeners('close')
+
+          onFinished(res, function (err, msg) {
+            calls.push({
+              err: err,
+              msg: msg,
+              errorListeners: stream.listeners('error'),
+              closeListeners: stream.listeners('close')
+            })
+          })
+
+          assert.strictEqual(onFinished.isFinished(res), false)
+          stream.destroy(expected)
+        })
+        var client
+
+        server.listen(function () {
+          var port = this.address().port
+          client = http2.connect('http://127.0.0.1:' + port)
+          var req = client.request({ ':method': 'POST' })
+          req.on('error', noop)
+          req.resume()
+          req.write('unfinished request body')
+        })
+      })
+
       it('should fire with error', function (done) {
         var server = http2.createServer(function (req, res) {
           onFinished(res, function (_err) {
@@ -299,6 +344,38 @@ describe('http2 compatibility mode', function () {
   })
 
   describe('onFinished(req, listener)', function () {
+    it('should remove stream listeners when the request finishes before the response', function (done) {
+      var server = http2.createServer(function (req, res) {
+        var stream = req.stream
+        var errorListeners = stream.listeners('error')
+        var closeListeners = stream.listeners('close')
+
+        onFinished(req, function (err) {
+          assert.ifError(err)
+          assert.strictEqual(stream.closed, false)
+          assert.strictEqual(res.writableEnded, false)
+          assert.deepStrictEqual(stream.listeners('error'), errorListeners)
+          assert.deepStrictEqual(stream.listeners('close'), closeListeners)
+          res.end('response body')
+        })
+
+        req.resume()
+      })
+      var client
+
+      server.listen(function () {
+        var port = this.address().port
+        client = http2.connect('http://127.0.0.1:' + port)
+        var req = client.request({ ':method': 'POST' })
+        req.on('end', function () {
+          client.close()
+          server.close(done)
+        })
+        req.resume()
+        req.end('request body')
+      })
+    })
+
     describe('when reusing an HTTP/2 session', function () {
       it('should fire for each request', function (done) {
         var called = false
@@ -341,6 +418,51 @@ describe('http2 compatibility mode', function () {
     })
 
     describe('when request errors', function () {
+      it('should forward the original error once and remove stream listeners', function (done) {
+        var server = http2.createServer(function (req, res) {
+          var stream = req.stream
+          var expected = new Error('HTTP/2 stream failure')
+          var calls = []
+
+          stream.once('close', function () {
+            setImmediate(function () {
+              assert.strictEqual(calls.length, 1)
+              assert.strictEqual(calls[0].err, expected)
+              assert.strictEqual(calls[0].msg, req)
+              assert.deepStrictEqual(calls[0].errorListeners, errorListeners)
+              assert.deepStrictEqual(calls[0].closeListeners, closeListeners)
+              client.destroy()
+              server.close(done)
+            })
+          })
+
+          var errorListeners = stream.listeners('error')
+          var closeListeners = stream.listeners('close')
+
+          onFinished(req, function (err, msg) {
+            calls.push({
+              err: err,
+              msg: msg,
+              errorListeners: stream.listeners('error'),
+              closeListeners: stream.listeners('close')
+            })
+          })
+
+          assert.strictEqual(onFinished.isFinished(req), false)
+          stream.destroy(expected)
+        })
+        var client
+
+        server.listen(function () {
+          var port = this.address().port
+          client = http2.connect('http://127.0.0.1:' + port)
+          var req = client.request({ ':method': 'POST' })
+          req.on('error', noop)
+          req.resume()
+          req.write('unfinished request body')
+        })
+      })
+
       it('should fire with error', function (done) {
         var server = http2.createServer(function (req, res) {
           onFinished(req, function (_err) {
